@@ -1,0 +1,16 @@
+{
+  "name": "spatial-data-engine",
+  "version": "2.0.0",
+  "description": "Spatial Data Engine with Interactive Map & Multi-layer Storage",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "multer": "^1.4.5-lts.1",
+    "pg": "^8.11.5",
+    "xml2js": "^0.6.2"
+  }
+}

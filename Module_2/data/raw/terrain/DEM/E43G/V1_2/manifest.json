@@ -1,0 +1,71 @@
+{
+  "dataset_id": 8,
+  "dataset_name": "API_Test_V1",
+  "dataset_type": "DEM",
+  "theme": "terrain",
+  "tile": "E43G",
+  "version": "V1",
+  "status": "READY",
+  "source": "Bhuvan / NRSC / ISRO",
+  "platform": "Cartosat-1",
+  "sensor": "PAN(2.5m) Stereo Data",
+  "bits_per_pixel": "16bit",
+  "files": [
+    {
+      "name": "dem.tif",
+      "type": "GeoTIFF",
+      "role": "primary"
+    },
+    {
+      "name": "metadata.xml",
+      "type": "XML",
+      "role": "metadata"
+    }
+  ],
+  "spatial_metadata": {
+    "bounds": {
+      "west": 72.0,
+      "south": 18.0,
+      "east": 73.0,
+      "north": 19.0,
+      "source": "xml",
+      "confidence": "high",
+      "crs": null
+    },
+    "resolution": "1arc sec",
+    "format": "Geotiff",
+    "crs": "EPSG:4326",
+    "consistency": "consistent"
+  },
+  "ingested_at": null,
+  "original_filename": "reprocess_7.zip",
+  "classification": null,
+  "metadata_provenance": {
+    "tile": {
+      "value": "E43G",
+      "source": "xml",
+      "confidence": "high"
+    },
+    "version": {
+      "value": "V1",
+      "source": "xml",
+      "confidence": "high"
+    },
+    "dataset_type": {
+      "value": "DEM",
+      "source": "xml",
+      "confidence": "high"
+    },
+    "theme": {
+      "value": "terrain",
+      "source": "xml",
+      "confidence": "high"
+    },
+    "dataset_name": {
+      "value": "API_Test_V1",
+      "source": "xml",
+      "confidence": "high"
+    }
+  },
+  "quality": null
+}

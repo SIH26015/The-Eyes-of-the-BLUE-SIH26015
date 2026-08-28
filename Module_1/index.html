@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Layer Spatial Data Engine</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-mouseposition@1.2.0/src/L.Control.MousePosition.css" />
+    
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --bg-panel: #1e293b;
+            --border-color: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --success: #10b981;
+            --warning: #f59e0b;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { display: flex; height: 100vh; background-color: var(--bg-dark); color: var(--text-main); overflow: hidden; }
+        
+        /* Map Canvas */
+        #map { flex: 1; height: 100%; z-index: 1; background: #0b0f19; }
+        
+        /* Sidebar Dashboard */
+        #sidebar { 
+            width: 440px; 
+            background: var(--bg-panel); 
+            border-left: 1px solid var(--border-color); 
+            display: flex; 
+            flex-direction: column; 
+            z-index: 2;
+            box-shadow: -4px 0 15px rgba(0,0,0,0.5);
+        }
+
+        .sidebar-header { padding: 20px 24px; border-bottom: 1px solid var(--border-color); }
+        .sidebar-header h2 { font-size: 20px; font-weight: 600; }
+        .sidebar-header p { color: var(--text-muted); font-size: 13px; margin-top: 4px; }
+
+        .sidebar-content { padding: 20px 24px; overflow-y: auto; flex: 1; }
+
+        /* UI Cards */
+        .card { 
+            background: var(--bg-dark); 
+            padding: 16px; 
+            border-radius: 8px; 
+            border: 1px solid var(--border-color); 
+            margin-bottom: 16px;
+        }
+
+        .empty-state { color: var(--text-muted); font-size: 13px; font-style: italic; text-align: center; padding: 12px 0; }
+
+        label { display: block; font-size: 11px; font-weight: 700; color: var(--text-muted); margin: 10px 0 4px 0; text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        input[type="text"], select, input[type="file"], input[type="range"] { 
+            width: 100%; 
+            padding: 9px 12px; 
+            background: var(--bg-panel); 
+            border: 1px solid var(--border-color); 
+            border-radius: 6px; 
+            color: var(--text-main); 
+            font-size: 13px;
+        }
+
+        .btn { 
+            width: 100%; 
+            padding: 10px; 
+            background: var(--accent); 
+            color: white; 
+            border: none; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            margin-top: 14px; 
+            font-weight: 600; 
+            font-size: 13px; 
+        }
+        .btn:hover { background: var(--accent-hover); }
+
+        /* Multi-Layer Item Cards */
+        .layer-item {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .layer-info strong { display: block; font-size: 13px; color: var(--accent); }
+        .layer-info span { font-size: 11px; color: var(--text-muted); }
+        .badge { background: var(--border-color); color: var(--text-main); padding: 3px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; }
+        
+        /* Leaflet Control Overrides for Dark Mode */
+        .leaflet-control-layers {
+            background: var(--bg-panel) !important;
+            color: var(--text-main) !important;
+            border: 1px solid var(--border-color) !important;
+            border-radius: 8px !important;
+        }
+        .leaflet-control-layers-base label, .leaflet-control-layers-overlays label {
+            color: var(--text-main) !important;
+            font-size: 12px !important;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="map"></div>
+
+    <div id="sidebar">
+        <div class="sidebar-header">
+            <h2>Multi-Layer Spatial Engine</h2>
+            <p>Manage GIS spatial layers, raster overlays, and field evidence coordinates.</p>
+        </div>
+
+        <div class="sidebar-content">
+            <div class="card">
+                <h4 style="font-size: 14px;">Raster Layer Opacity Control</h4>
+                <label for="opacity-slider">Overlay Opacity</label>
+                <input type="range" id="opacity-slider" min="0" max="1" step="0.1" value="0.8">
+            </div>
+
+            <div id="block-editor">
+                <div class="card"><div class="empty-state">No block selected.<br>Click any 1° grid square on the map to ingest data.</div></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
+
+    <script>
+        // 1. Setup Layer Groups (Multi-Layer Architecture)
+        const gridGroup = L.layerGroup();
+        const demGroup = L.layerGroup();
+        const satGroup = L.layerGroup();
+        const photoGroup = L.layerGroup();
+
+        // 2. Base Tile Layers
+        const cartoDarkNoLabels = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/dark_nolabels/{z}/{x}/{y}{r}.png', {
+            attribution: '© OpenStreetMap | CARTO', maxZoom: 18
+        });
+
+        const osmStandard = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors', maxZoom: 18
+        });
+
+        const esriSatellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+        });
+
+        // 3. Initialize Map Centered on Maharashtra, India
+        const map = L.map('map', {
+            center: [20.5537, 74.5288],
+            zoom: 6,
+            layers: [cartoDarkNoLabels, gridGroup, demGroup, satGroup, photoGroup]
+        });
+
+        // 4. Add Leaflet Layer Control Switcher
+        const baseMaps = {
+            "CARTO Dark (Clean)": cartoDarkNoLabels,
+            "OpenStreetMap": osmStandard,
+            "Esri World Satellite": esriSatellite
+        };
+
+        const overlayMaps = {
+            "1° Spatial Grid": gridGroup,
+            "DEM / Elevation Rasters": demGroup,
+            "Satellite Overlays": satGroup,
+            "Field Photo Evidence": photoGroup
+        };
+
+        L.control.layers(baseMaps, overlayMaps, { collapsed: false }).addTo(map);
+
+        // State Storage
+        const catalogDatabase = {};
+        const activeOverlays = {};
+        let selectedRect = null;
+
+        // 5. Generate 1° Spatial Grid across India
+        for (let lat = 8; lat < 36; lat++) {
+            for (let lng = 68; lng < 96; lng++) {
+                const blockKey = `${lng}E_${lat}N`;
+                const bounds = [[lat, lng], [lat + 1, lng + 1]];
+
+                const rect = L.rectangle(bounds, {
+                    stroke: true,
+                    color: "#475569",
+                    weight: 0.8,
+                    fillColor: "#3388ff",
+                    fillOpacity: 0.03
+                }).addTo(gridGroup);
+
+                rect.blockKey = blockKey;
+                rect.bounds = bounds;
+
+                // Mouse Over / Mouse Out Styles
+                rect.on('mouseover', function() {
+                    if (selectedRect !== rect) this.setStyle({ color: '#94a3b8', weight: 1.5 });
+                });
+                rect.on('mouseout', function() {
+                    if (selectedRect !== rect) this.setStyle({ color: '#475569', weight: 0.8 });
+                });
+
+                // Selection Click Event
+                rect.on('click', function () {
+                    if (selectedRect) {
+                        const hasData = catalogDatabase[selectedRect.blockKey] && catalogDatabase[selectedRect.blockKey].length > 0;
+                        selectedRect.setStyle({ 
+                            color: hasData ? "#10b981" : "#475569", 
+                            weight: hasData ? 2 : 0.8,
+                            fillColor: hasData ? "#10b981" : "#3388ff",
+                            fillOpacity: hasData ? 0.25 : 0.03
+                        });
+                    }
+
+                    selectedRect = rect;
+                    rect.setStyle({ color: "#3b82f6", weight: 3, fillColor: "#3b82f6", fillOpacity: 0.2 });
+
+                    renderEditor(blockKey, bounds);
+                });
+            }
+        }
+
+        // 6. Sidebar Block Editor Renderer
+        function renderEditor(key, bounds) {
+            const layers = catalogDatabase[key] || [];
+            
+            let layersHtml = layers.length === 0 
+                ? `<div class="empty-state">No datasets attached to this grid tile.</div>` 
+                : '';
+            
+            layers.forEach(layer => {
+                layersHtml += `
+                    <div class="layer-item">
+                        <div class="layer-info">
+                            <strong>${layer.theme}</strong>
+                            <span>${layer.name}</span>
+                        </div>
+                        <span class="badge">${layer.source}</span>
+                    </div>
+                `;
+            });
+
+            document.getElementById('block-editor').innerHTML = `
+                <div class="card" style="border-color: var(--accent);">
+                    <h3 style="font-size: 16px;">Tile Key: ${key}</h3>
+                    <p style="font-size: 11px; color: var(--text-muted);">
+                        Bounds: ${bounds[0][1]}°E to ${bounds[1][1]}°E, ${bounds[0][0]}°N to ${bounds[1][0]}°N
+                    </p>
+                </div>
+
+                <div class="card">
+                    <h4 style="margin-bottom: 8px; font-size: 13px;">Registered Layers</h4>
+                    ${layersHtml}
+                </div>
+
+                <div class="card">
+                    <h4 style="font-size: 13px; margin-bottom: 4px;">Ingest Raster Overlay / Metadata</h4>
+                    
+                    <label>Layer Category</label>
+                    <select id="input-theme">
+                        <option value="Terrain (DEM)">Terrain (DEM Raster)</option>
+                        <option value="Satellite Imagery">Satellite Imagery</option>
+                        <option value="Watershed Map">Watershed Boundary Map</option>
+                    </select>
+
+                    <label>Dataset Identifier</label>
+                    <input type="text" id="input-name" placeholder="e.g., C1_DEM_16b_2006">
+
+                    <label>Source / Satellite</label>
+                    <input type="text" id="input-source" placeholder="e.g., Cartosat-1 / NRSC">
+
+                    <label>Raster Image Overlay (.png, .jpg)</label>
+                    <input type="file" id="input-image" accept="image/*">
+
+                    <button class="btn" onclick="saveData('${key}')">Attach Layer to Map</button>
+                </div>
+
+                <div class="card">
+                    <h4 style="font-size: 13px; margin-bottom: 4px;">Geo-Tagged Field Evidence</h4>
+                    <label>Upload Camera Photo with EXIF GPS</label>
+                    <input type="file" id="input-exif-photo" accept="image/*" onchange="processExifPhoto(this)">
+                </div>
+            `;
+        }
+
+        // 7. Raster Layer Registration & Dynamic Overlay Rendering
+        function saveData(key) {
+            if (!catalogDatabase[key]) catalogDatabase[key] = [];
+
+            const theme = document.getElementById('input-theme').value;
+            const name = document.getElementById('input-name').value || "Unnamed Layer";
+            const source = document.getElementById('input-source').value || "Local Source";
+            const fileInput = document.getElementById('input-image');
+
+            catalogDatabase[key].push({ theme, name, source });
+
+            if (fileInput.files && fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const imageUrl = e.target.result;
+                    const opacityVal = parseFloat(document.getElementById('opacity-slider').value);
+                    
+                    // Route to correct target Leaflet layer group based on dataset type
+                    const targetGroup = theme.includes("DEM") ? demGroup : satGroup;
+
+                    const overlay = L.imageOverlay(imageUrl, selectedRect.bounds, { 
+                        opacity: opacityVal 
+                    }).addTo(targetGroup);
+
+                    if (!activeOverlays[key]) activeOverlays[key] = [];
+                    activeOverlays[key].push(overlay);
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+            }
+
+            selectedRect.setStyle({ color: "#10b981", weight: 2, fillColor: "#10b981", fillOpacity: 0.25 });
+            renderEditor(key, selectedRect.bounds);
+        }
+
+        // 8. Dynamic Opacity Slider Event Listener
+        document.getElementById('opacity-slider').addEventListener('input', function(e) {
+            const opacityVal = parseFloat(e.target.value);
+            Object.values(activeOverlays).forEach(overlayArray => {
+                overlayArray.forEach(overlay => overlay.setOpacity(opacityVal));
+            });
+        });
+
+        // 9. Automatic EXIF GPS Extractor for Field Photos
+        function processExifPhoto(inputElement) {
+            if (inputElement.files && inputElement.files[0]) {
+                const file = inputElement.files[0];
+                EXIF.getData(file, function() {
+                    const lat = EXIF.getTag(this, "GPSLatitude");
+                    const latRef = EXIF.getTag(this, "GPSLatitudeRef");
+                    const lng = EXIF.getTag(this, "GPSLongitude");
+                    const lngRef = EXIF.getTag(this, "GPSLongitudeRef");
+
+                    if (lat && lng) {
+                        // Convert EXIF Degrees/Minutes/Seconds to Decimal Degrees
+                        const latDec = (lat[0] + lat[1]/60 + lat[2]/3600) * (latRef === "S" ? -1 : 1);
+                        const lngDec = (lng[0] + lng[1]/60 + lng[2]/3600) * (lngRef === "W" ? -1 : 1);
+
+                        // Create Pinpoint Marker on Map
+                        const marker = L.marker([latDec, lngDec]).addTo(photoGroup);
+                        marker.bindPopup(`
+                            <div style="font-family: sans-serif; font-size: 12px;">
+                                <strong>📍 Field Photo Evidence</strong><br>
+                                <b>Lat:</b> ${latDec.toFixed(4)}°, <b>Lng:</b> ${lngDec.toFixed(4)}°<br>
+                                <b>File:</b> ${file.name}
+                            </div>
+                        `).openPopup();
+
+                        map.flyTo([latDec, lngDec], 10);
+                        alert(`GPS Coordinates extracted!\nMarker placed at: ${latDec.toFixed(4)}° N, ${lngDec.toFixed(4)}° E`);
+                    } else {
+                        alert("No embedded GPS metadata found in this photo. Please upload a geo-tagged mobile image.");
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html>

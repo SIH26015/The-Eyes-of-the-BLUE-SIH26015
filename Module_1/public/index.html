@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Interactive Spatial Grid Engine</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+        body { display: flex; height: 100vh; }
+        #map { flex: 1; height: 100%; }
+        #sidebar { width: 360px; background: #f4f6f8; border-left: 2px solid #ccc; padding: 20px; overflow-y: auto; }
+        .card { background: #fff; padding: 15px; border-radius: 6px; border: 1px solid #ddd; margin-top: 12px; }
+        .btn { width: 100%; padding: 10px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 10px; font-weight: bold; }
+        .btn:hover { background: #0056b3; }
+        input, select { width: 100%; padding: 8px; margin: 6px 0 12px 0; border: 1px solid #ccc; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+    <div id="map"></div>
+
+    <div id="sidebar">
+        <h2>Block Data Manager</h2>
+        <p style="color: #666; font-size: 13px;">Click any block on the map to view, add, or edit attached datasets.</p>
+
+        <div id="block-editor">
+            <div class="card"><i>No block selected.</i></div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        const map = L.map('map').setView([18.5, 73.5], 7);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
+
+        // Store data attached to each block (Indexed by tile bounds key)
+        const blockDatabase = {
+            "72E_18N": {
+                tileNo: "cdne43g",
+                datasetName: "C1_DEM_16b_2006-2008_v1_72E18N_e43g",
+                theme: "Terrain (DEM)",
+                satellite: "Cartosat-1",
+                resolution: "1 arc sec",
+                status: "Data Available"
+            }
+        };
+
+        let selectedLayer = null;
+
+        // Draw 1-degree grid squares over Western India region (16N-20N, 72E-76E)
+        for (let lat = 16; lat < 20; lat++) {
+            for (let lng = 72; lng < 76; lng++) {
+                const blockKey = `${lng}E_${lat}N`;
+                const bounds = [[lat, lng], [lat + 1, lng + 1]];
+                const hasData = blockDatabase[blockKey];
+
+                const rect = L.rectangle(bounds, {
+                    color: hasData ? "#28a745" : "#007bff",
+                    weight: 1.5,
+                    fillOpacity: hasData ? 0.35 : 0.1
+                }).addTo(map);
+
+                rect.blockKey = blockKey;
+                rect.bounds = bounds;
+
+                // Handle click event on each grid block
+                rect.on('click', function (e) {
+                    if (selectedLayer) {
+                        selectedLayer.setStyle({ weight: 1.5 });
+                    }
+                    selectedLayer = rect;
+                    rect.setStyle({ weight: 3.5 });
+
+                    openBlockEditor(blockKey, bounds);
+                });
+            }
+        }
+
+        function openBlockEditor(key, bounds) {
+            const data = blockDatabase[key] || {
+                tileNo: key,
+                datasetName: "Empty Tile",
+                theme: "None",
+                satellite: "N/A",
+                resolution: "N/A",
+                status: "No Data"
+            };
+
+            document.getElementById('block-editor').innerHTML = `
+                <div class="card">
+                    <h3>Block: ${key}</h3>
+                    <p style="font-size: 12px; color: #555;">Bounds: ${bounds[0][1]}°E-${bounds[1][1]}°E, ${bounds[0][0]}°N-${bounds[1][0]}°N</p>
+                    <hr style="margin: 10px 0;">
+
+                    <label><strong>Tile ID / Ref:</strong></label>
+                    <input type="text" id="edit-tileNo" value="${data.tileNo}">
+
+                    <label><strong>Dataset Name:</strong></label>
+                    <input type="text" id="edit-dataset" value="${data.datasetName}">
+
+                    <label><strong>Theme / Type:</strong></label>
+                    <select id="edit-theme">
+                        <option value="Terrain (DEM)" ${data.theme.includes('DEM') ? 'selected' : ''}>Terrain (DEM)</option>
+                        <option value="Satellite Imagery" ${data.theme.includes('Satellite') ? 'selected' : ''}>Satellite Imagery</option>
+                        <option value="Field Photo" ${data.theme.includes('Photo') ? 'selected' : ''}>Field Photo</option>
+                        <option value="None" ${data.theme === 'None' ? 'selected' : ''}>None</option>
+                    </select>
+
+                    <label><strong>Satellite / Source:</strong></label>
+                    <input type="text" id="edit-satellite" value="${data.satellite}">
+
+                    <button class="btn" onclick="saveBlockData('${key}')">Save / Attach Data to Block</button>
+                </div>
+            `;
+        }
+
+        function saveBlockData(key) {
+            blockDatabase[key] = {
+                tileNo: document.getElementById('edit-tileNo').value,
+                datasetName: document.getElementById('edit-dataset').value,
+                theme: document.getElementById('edit-theme').value,
+                satellite: document.getElementById('edit-satellite').value,
+                resolution: "User Defined",
+                status: "Data Attached"
+            };
+
+            selectedLayer.setStyle({ color: "#28a745", fillOpacity: 0.35 });
+            alert("Block " + key + " updated successfully!");
+        }
+    </script>
+</body>
+</html>

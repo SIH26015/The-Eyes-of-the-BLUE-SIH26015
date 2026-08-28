@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Import — The Eyes of the Blue</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f7fa; color: #2d3748; }
+        
+        .navbar {
+            background: #1a202c;
+            color: white;
+            padding: 0 24px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .navbar-brand { font-weight: 700; font-size: 18px; letter-spacing: 0.5px; }
+        .navbar-links { display: flex; gap: 24px; }
+        .navbar-links a {
+            color: #a0aec0;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        .navbar-links a:hover, .navbar-links a.active { color: white; }
+        
+        .container { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+        .page-title { font-size: 24px; font-weight: 700; margin-bottom: 24px; color: #1a202c; }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        .card-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; color: #1a202c; }
+        
+        .upload-area {
+            border: 2px dashed #cbd5e0;
+            border-radius: 10px;
+            padding: 48px 24px;
+            text-align: center;
+            background: #fafbfc;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .upload-area.dragover { border-color: #3182ce; background: #ebf8ff; }
+        .upload-area.drag-error { border-color: #e53e3e; background: #fff5f5; }
+        .upload-area h3 { font-size: 18px; color: #2d3748; margin-bottom: 8px; }
+        .upload-area p { color: #718096; font-size: 14px; margin-bottom: 16px; }
+        .upload-icon { font-size: 40px; color: #a0aec0; margin-bottom: 12px; }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: #2b6cb0;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn:hover { background: #2c5282; }
+        .btn:disabled { background: #a0aec0; cursor: not-allowed; }
+        .btn-secondary { background: #e2e8f0; color: #2d3748; }
+        .btn-secondary:hover { background: #cbd5e0; }
+        .btn-danger { background: #e53e3e; }
+        .btn-danger:hover { background: #c53030; }
+        .btn-sm { padding: 6px 12px; font-size: 13px; }
+        
+        input[type="file"] { display: none; }
+        
+        .file-preview {
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-top: 16px;
+        }
+        .file-preview.visible { display: flex; }
+        .file-info { display: flex; align-items: center; gap: 12px; }
+        .file-icon { font-size: 24px; color: #4299e1; }
+        .file-details { line-height: 1.4; }
+        .file-name { font-weight: 600; font-size: 14px; }
+        .file-size { font-size: 12px; color: #718096; }
+        
+        .result-section { display: none; }
+        .result-section.visible { display: block; }
+        
+        .step-list { list-style: none; }
+        .step-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px solid #f7fafc;
+            font-size: 14px;
+        }
+        .step-item:last-child { border-bottom: none; }
+        .step-icon {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            flex-shrink: 0;
+        }
+        .step-done { background: #c6f6d5; color: #22543d; }
+        .step-warning { background: #feebc8; color: #744210; }
+        .step-complete { background: #2b6cb0; color: white; }
+        .step-error { background: #fed7e2; color: #702459; }
+        
+        .result-meta {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
+        }
+        .meta-item { display: flex; flex-direction: column; gap: 4px; }
+        .meta-label { font-size: 12px; color: #718096; text-transform: uppercase; letter-spacing: 0.5px; }
+        .meta-value { font-size: 15px; font-weight: 600; color: #1a202c; }
+        .meta-value.unknown { color: #a0aec0; font-weight: 400; font-style: italic; }
+        
+        .provenance {
+            margin-top: 16px;
+            padding: 16px;
+            background: #f7fafc;
+            border-radius: 8px;
+        }
+        .provenance-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            user-select: none;
+        }
+        .provenance-title { font-size: 13px; font-weight: 600; color: #4a5568; }
+        .provenance-toggle { font-size: 12px; color: #718096; }
+        .provenance-body {
+            display: none;
+            margin-top: 12px;
+        }
+        .provenance-body.open { display: block; }
+        .prov-item { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; border-bottom: 1px solid #edf2f7; }
+        .prov-item:last-child { border-bottom: none; }
+        .prov-key { color: #718096; }
+        .prov-val { font-weight: 600; }
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .badge-high { background: #c6f6d5; color: #22543d; }
+        .badge-medium { background: #feebc8; color: #744210; }
+        .badge-low { background: #fed7e2; color: #702459; }
+        
+        .status-banner {
+            display: none;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+        .status-banner.visible { display: flex; }
+        .status-banner.success { background: #f0fff4; color: #22543d; border: 1px solid #9ae6b4; }
+        .status-banner.error { background: #fff5f5; color: #742a2a; border: 1px solid #feb2b2; }
+        .status-banner.warning { background: #fffaf0; color: #744210; border: 1px solid #fbd38d; }
+        
+        .catalog-table { width: 100%; border-collapse: collapse; }
+        .catalog-table th, .catalog-table td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+        .catalog-table th { background: #f7fafc; font-weight: 600; color: #4a5568; font-size: 13px; }
+        .catalog-table td { color: #2d3748; font-size: 14px; }
+        .catalog-table tr:hover { background: #fafbfc; }
+        
+        .badge-ready { background: #c6f6d5; color: #22543d; }
+        .badge-processing { background: #feebc8; color: #744210; }
+        .badge-quarantined { background: #fed7e2; color: #702459; }
+        .badge-already_exists { background: #edf2f7; color: #4a5568; }
+        .badge-needs_review { background: #feebc8; color: #744210; }
+        
+        .empty-state { text-align: center; padding: 48px 24px; color: #a0aec0; }
+        .empty-state-icon { font-size: 40px; margin-bottom: 12px; }
+        
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal {
+            background: white;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 640px;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 24px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .modal-title { font-size: 18px; font-weight: 700; }
+        .modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: #a0aec0; }
+        .modal-close:hover { color: #2d3748; }
+        .modal-body { padding: 24px; }
+        
+        .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .detail-item { display: flex; flex-direction: column; gap: 4px; }
+        .detail-label { font-size: 12px; color: #718096; text-transform: uppercase; letter-spacing: 0.5px; }
+        .detail-value { font-size: 14px; font-weight: 600; }
+        
+        .actions { display: flex; gap: 12px; margin-top: 24px; }
+        
+        @media (max-width: 640px) {
+            .container { padding: 16px; }
+            .result-meta { grid-template-columns: 1fr; }
+            .detail-grid { grid-template-columns: 1fr; }
+            .navbar-links { gap: 16px; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">The Eyes of the Blue</div>
+        <div class="navbar-links">
+            <a href="/data-import" id="nav-import">Data Import</a>
+            <a href="/data-catalog" id="nav-catalog">Spatial Catalog</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1 class="page-title">Data Import</h1>
+
+        <div class="card">
+            <div class="card-title">Upload Dataset</div>
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">📂</div>
+                <h3>Drag and drop a geospatial dataset</h3>
+                <p>Supported: ZIP, TIF, TIFF, XML, SHP, GeoJSON, CSV</p>
+                <button class="btn" id="browseBtn">Browse Files</button>
+                <input type="file" id="fileInput" accept=".zip,.tif,.tiff,.xml,.shp,.geojson,.json,.csv">
+            </div>
+            
+            <div class="file-preview" id="filePreview">
+                <div class="file-info">
+                    <div class="file-icon">📄</div>
+                    <div class="file-details">
+                        <div class="file-name" id="fileName">—</div>
+                        <div class="file-size" id="fileSize">—</div>
+                    </div>
+                </div>
+                <div style="display:flex;gap:8px;">
+                    <button class="btn btn-sm" id="uploadBtn">Upload</button>
+                    <button class="btn btn-sm btn-danger" id="removeBtn">Remove</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="status-banner" id="statusBanner"></div>
+
+        <div class="card result-section" id="resultSection">
+            <div class="card-title">Processing Result</div>
+            <div id="resultContent"></div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Recent Imports</div>
+            <div style="overflow-x:auto;">
+                <table class="catalog-table">
+                    <thead>
+                        <tr>
+                            <th>File</th>
+                            <th>Type</th>
+                            <th>Tile</th>
+                            <th>Version</th>
+                            <th>Files</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recentTable">
+                        <tr><td colspan="6" class="empty-state">No datasets imported yet</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="detailModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">Dataset Details</div>
+                <button class="modal-close" id="modalClose">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '';
+        const SOURCE_LABELS = {
+            'xml': 'XML Metadata',
+            'geotiff': 'GeoTIFF',
+            'filename': 'Filename',
+            'inference': 'Inferred',
+            'manual': 'Manual',
+            'unknown': 'Unknown',
+        };
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const filePreview = document.getElementById('filePreview');
+        const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const removeBtn = document.getElementById('removeBtn');
+        const browseBtn = document.getElementById('browseBtn');
+        const statusBanner = document.getElementById('statusBanner');
+        const resultSection = document.getElementById('resultSection');
+        const resultContent = document.getElementById('resultContent');
+        const recentTable = document.getElementById('recentTable');
+        const detailModal = document.getElementById('detailModal');
+        const modalClose = document.getElementById('modalClose');
+        const modalBody = document.getElementById('modalBody');
+
+        let selectedFile = null;
+
+        browseBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            fileInput.click();
+        });
+
+        uploadArea.addEventListener('click', () => fileInput.click());
+        
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+            uploadArea.classList.remove('drag-error');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            if (e.dataTransfer.files.length > 0) {
+                selectFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                selectFile(e.target.files[0]);
+            }
+        });
+
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function selectFile(file) {
+            selectedFile = file;
+            fileName.textContent = file.name;
+            fileSize.textContent = formatBytes(file.size);
+            filePreview.classList.add('visible');
+            uploadArea.style.display = 'none';
+            resultSection.classList.remove('visible');
+            statusBanner.classList.remove('visible');
+        }
+
+        function clearSelection() {
+            selectedFile = null;
+            fileInput.value = '';
+            filePreview.classList.remove('visible');
+            uploadArea.style.display = 'block';
+            resultSection.classList.remove('visible');
+            statusBanner.classList.remove('visible');
+        }
+
+        removeBtn.addEventListener('click', clearSelection);
+
+        uploadBtn.addEventListener('click', async () => {
+            if (!selectedFile) return;
+            
+            uploadBtn.disabled = true;
+            removeBtn.disabled = true;
+            statusBanner.className = 'status-banner visible';
+            statusBanner.classList.add('warning');
+            statusBanner.innerHTML = '<span>⏳ Processing dataset...</span>';
+            resultSection.classList.remove('visible');
+
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+
+            try {
+                const response = await fetch(`${API_BASE}/api/datasets/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                const result = (data.results || [])[0];
+
+                if (!result) {
+                    throw new Error('No result returned from server');
+                }
+
+                renderResult(result);
+                loadRecentImports();
+            } catch (error) {
+                statusBanner.className = 'status-banner visible error';
+                statusBanner.innerHTML = `<span>✗ Error: ${error.message}</span>`;
+            } finally {
+                uploadBtn.disabled = false;
+                removeBtn.disabled = false;
+            }
+        });
+
+        function renderResult(result) {
+            resultSection.classList.add('visible');
+            statusBanner.className = 'status-banner visible';
+            
+            const status = result.status || 'unknown';
+            const isSuccess = status === 'success' || status === 'ready';
+            const isNeedsReview = status === 'needs_review';
+            const isQuarantined = status === 'quarantined';
+            const isDuplicate = status === 'already_exists';
+            
+            if (isSuccess) {
+                statusBanner.classList.add('success');
+                statusBanner.innerHTML = '<span>✓ Dataset imported successfully</span>';
+            } else if (isQuarantined) {
+                statusBanner.classList.add('error');
+                statusBanner.innerHTML = `<span>⚠ Import failed: ${result.error_reason || result.reason || 'Unknown error'}</span>`;
+            } else if (isDuplicate) {
+                statusBanner.classList.add('warning');
+                statusBanner.innerHTML = '<span>⚠ Dataset already exists</span>';
+            } else if (isNeedsReview) {
+                statusBanner.classList.add('warning');
+                statusBanner.innerHTML = '<span>⚠ Dataset needs review</span>';
+            } else {
+                statusBanner.classList.add('warning');
+                statusBanner.innerHTML = `<span>⚠ Status: ${status}</span>`;
+            }
+
+            const stepsHtml = (result.steps || []).map(s => {
+                let iconClass = 'step-pending';
+                let icon = '○';
+                if (s.status === 'done') { iconClass = 'step-done'; icon = '✓'; }
+                else if (s.status === 'warning') { iconClass = 'step-warning'; icon = '⚠'; }
+                else if (s.status === 'complete') { iconClass = 'step-complete'; icon = '★'; }
+                else if (s.status === 'error') { iconClass = 'step-error'; icon = '✗'; }
+                return `<li class="step-item"><span class="step-icon ${iconClass}">${icon}</span>${s.step}</li>`;
+            }).join('');
+
+            let metaHtml = '';
+            if (isSuccess) {
+                const fields = [
+                    { label: 'Dataset Name', value: result.dataset_name, key: 'dataset_name' },
+                    { label: 'Type', value: result.dataset_type, key: 'dataset_type' },
+                    { label: 'Tile', value: result.tile, key: 'tile' },
+                    { label: 'Version', value: result.version, key: 'version' },
+                    { label: 'Bounds', value: result.bounds ? (Array.isArray(result.bounds) ? result.bounds.join(', ') : result.bounds) : null, key: 'bounds' },
+                    { label: 'Resolution', value: result.resolution, key: 'resolution' },
+                    { label: 'Format', value: result.format, key: 'format' },
+                    { label: 'Source', value: result.source, key: 'source' },
+                ];
+                
+                metaHtml = '<div class="result-meta">';
+                fields.forEach(f => {
+                    const display = f.value || 'Not available';
+                    const isUnknown = !f.value;
+                    metaHtml += `<div class="meta-item">
+                        <div class="meta-label">${f.label}</div>
+                        <div class="meta-value ${isUnknown ? 'unknown' : ''}">${display}</div>
+                    </div>`;
+                });
+                metaHtml += '</div>';
+
+                if (result.metadata_provenance) {
+                    metaHtml += '<div class="provenance">';
+                    metaHtml += '<div class="provenance-header" onclick="toggleProvenance()">';
+                    metaHtml += '<span class="provenance-title">Metadata Details</span>';
+                    metaHtml += '<span class="provenance-toggle" id="provToggle">Show</span>';
+                    metaHtml += '</div>';
+                    metaHtml += '<div class="provenance-body" id="provBody">';
+                    
+                    const provEntries = {
+                        'Tile': result.metadata_provenance.tile,
+                        'Version': result.metadata_provenance.version,
+                        'Dataset Type': result.metadata_provenance.dataset_type,
+                    };
+                    
+                    for (const [key, val] of Object.entries(provEntries)) {
+                        if (val) {
+                            const confClass = val.confidence ? val.confidence.toLowerCase() : 'low';
+                            const sourceLabel = SOURCE_LABELS[val.source] || val.source || '—';
+                            metaHtml += `<div class="prov-item">
+                                <span class="prov-key">${key}</span>
+                                <span class="prov-val">${val.value || 'Not available'} <span class="badge badge-${confClass}">${val.confidence || 'UNKNOWN'}</span></span>
+                            </div>`;
+                            metaHtml += `<div class="prov-item">
+                                <span class="prov-key">Source</span>
+                                <span class="prov-val">${sourceLabel}</span>
+                            </div>`;
+                        }
+                    }
+                    metaHtml += '</div></div>';
+                }
+
+                if (result.location) {
+                    metaHtml += `<div style="margin-top:16px;padding:12px;background:#f7fafc;border-radius:6px;font-family:monospace;font-size:13px;color:#4a5568;">Stored at: ${result.location}</div>`;
+                }
+
+                if (result.files && result.files.length > 0) {
+                    metaHtml += '<div style="margin-top:16px;">';
+                    metaHtml += '<div style="font-size:13px;font-weight:600;color:#4a5568;margin-bottom:8px;">Files:</div>';
+                    metaHtml += '<div style="background:#f7fafc;border-radius:6px;padding:12px;font-size:13px;">';
+                    result.files.forEach(f => {
+                        const icon = f.role === 'primary' ? '🗺' : f.role === 'metadata' ? '📄' : f.role === 'documentation' ? '📖' : '📋';
+                        metaHtml += `<div style="padding:4px 0;color:#2d3748;">${icon} ${f.name} <span style="color:#a0aec0;font-size:11px;">(${f.type})</span></div>`;
+                    });
+                    metaHtml += '</div></div>';
+                }
+            }
+
+            resultContent.innerHTML = `
+                <ul class="step-list">${stepsHtml}</ul>
+                ${metaHtml}
+                ${isNeedsReview ? `
+                <div style="margin-top:16px;padding:16px;background:#fffaf0;border-radius:8px;border:1px solid #fbd38d;">
+                    <div style="font-weight:600;color:#744210;margin-bottom:12px;">Manual Classification</div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                        <div>
+                            <label style="font-size:12px;color:#718096;display:block;margin-bottom:4px;">Theme</label>
+                            <select id="classifyTheme" style="width:100%;padding:8px;border:1px solid #e2e8f0;border-radius:6px;">
+                                <option value="terrain">Terrain</option>
+                                <option value="satellite">Satellite</option>
+                                <option value="landcover">Landcover</option>
+                                <option value="vector">Vector</option>
+                                <option value="unknown">Unknown</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size:12px;color:#718096;display:block;margin-bottom:4px;">Dataset Type</label>
+                            <select id="classifyType" style="width:100%;padding:8px;border:1px solid #e2e8f0;border-radius:6px;">
+                                <option value="DEM">DEM</option>
+                                <option value="DSM">DSM</option>
+                                <option value="LULC">LULC</option>
+                                <option value="VECTOR">VECTOR</option>
+                                <option value="UNKNOWN">UNKNOWN</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size:12px;color:#718096;display:block;margin-bottom:4px;">Tile</label>
+                            <input type="text" id="classifyTile" value="${result.tile || ''}" placeholder="e.g. F43U" style="width:100%;padding:8px;border:1px solid #e2e8f0;border-radius:6px;">
+                        </div>
+                        <div>
+                            <label style="font-size:12px;color:#718096;display:block;margin-bottom:4px;">Version</label>
+                            <input type="text" id="classifyVersion" value="${result.version || ''}" placeholder="e.g. V1" style="width:100%;padding:8px;border:1px solid #e2e8f0;border-radius:6px;">
+                        </div>
+                    </div>
+                    <button class="btn" onclick="submitClassification(${result.dataset_id})" style="margin-top:12px;">Save Classification</button>
+                </div>
+                ` : ''}
+                <div class="actions">
+                    <button class="btn" onclick="clearSelection()">Import Another Dataset</button>
+                    ${isSuccess ? `<button class="btn btn-secondary" onclick="window.location.href='/data-catalog'">View Catalog</button>` : ''}
+                </div>
+            `;
+        }
+
+        function toggleProvenance() {
+            const body = document.getElementById('provBody');
+            const toggle = document.getElementById('provToggle');
+            body.classList.toggle('open');
+            toggle.textContent = body.classList.contains('open') ? 'Hide' : 'Show';
+        }
+
+        async function submitClassification(datasetId) {
+            const theme = document.getElementById('classifyTheme').value;
+            const datasetType = document.getElementById('classifyType').value;
+            const tile = document.getElementById('classifyTile').value;
+            const version = document.getElementById('classifyVersion').value;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/datasets/${datasetId}/classify`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({theme, dataset_type: datasetType, tile, version})
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    alert('Classification saved. Dataset moved to: ' + data.location);
+                    loadRecentImports();
+                } else {
+                    alert('Failed: ' + (data.detail || 'Unknown error'));
+                }
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
+        }
+
+        async function loadRecentImports() {
+            try {
+                const response = await fetch(`${API_BASE}/api/datasets/`);
+                const data = await response.json();
+                const tbody = document.getElementById('recentTable');
+                tbody.innerHTML = '';
+                
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No datasets imported yet</td></tr>';
+                    return;
+                }
+
+                data.slice(0, 10).forEach(ds => {
+                    const filename = ds.original_filename || ds.file_path.split('/').pop() || ds.file_path;
+                    const status = ds.status === 'QUARANTINED' ? 'Quarantined' :
+                                   ds.status === 'ALREADY_EXISTS' ? 'Already Exists' :
+                                   ds.status === 'READY' ? 'Ready' : 'Processing';
+                    const fileCount = ds.file_count || '-';
+                    
+                    const badgeClass = ds.status === 'READY' ? 'badge-ready' :
+                                       ds.status === 'QUARANTINED' ? 'badge-quarantined' :
+                                       ds.status === 'ALREADY_EXISTS' ? 'badge-already_exists' :
+                                       ds.status === 'NEEDS_REVIEW' ? 'badge-needs_review' : 'badge-processing';
+                    
+                    const row = document.createElement('tr');
+                    row.style.cursor = 'pointer';
+                    row.innerHTML = `
+                        <td>${filename}</td>
+                        <td>${ds.dataset_type || 'UNKNOWN'}</td>
+                        <td>${ds.tile || '-'}</td>
+                        <td>${ds.version || '-'}</td>
+                        <td>${fileCount}</td>
+                        <td><span class="badge ${badgeClass}">${status}</span></td>
+                    `;
+                    row.addEventListener('click', () => openDetail(ds.id));
+                    tbody.appendChild(row);
+                });
+            } catch (e) {
+                console.log('Could not load recent imports');
+            }
+        }
+
+        async function openDetail(id) {
+            try {
+                const response = await fetch(`${API_BASE}/api/datasets/${id}`);
+                const ds = await response.json();
+                
+                let html = '<div class="detail-grid">';
+                const fields = [
+                    ['Dataset Name', ds.dataset_name],
+                    ['Type', ds.dataset_type],
+                    ['Theme', ds.theme],
+                    ['Tile', ds.tile],
+                    ['Version', ds.version],
+                    ['Status', ds.status],
+                    ['Resolution', ds.resolution],
+                    ['Format', ds.format],
+                    ['Source', ds.source],
+                    ['Imported At', ds.ingested_at],
+                    ['File Path', ds.file_path],
+                    ['Original File', ds.original_filename],
+                ];
+                fields.forEach(([label, value]) => {
+                    const display = value || 'Not available';
+                    html += `<div class="detail-item"><div class="detail-label">${label}</div><div class="detail-value">${display}</div></div>`;
+                });
+                html += '</div>';
+                
+                if (ds.min_lon && ds.max_lon && ds.min_lat && ds.max_lat) {
+                    html += `<div style="margin-top:16px;padding:12px;background:#f7fafc;border-radius:6px;font-size:14px;">
+                        <strong>Bounds:</strong> ${ds.min_lon}, ${ds.min_lat} → ${ds.max_lon}, ${ds.max_lat}
+                    </div>`;
+                }
+                
+                if (ds.error_reason) {
+                    html += `<div style="margin-top:12px;padding:12px;background:#fff5f5;border-radius:6px;color:#742a2a;font-size:14px;">
+                        <strong>Error:</strong> ${ds.error_reason}
+                    </div>`;
+                }
+                
+                modalBody.innerHTML = html;
+                detailModal.classList.add('open');
+            } catch (e) {
+                alert('Could not load dataset details');
+            }
+        }
+
+        modalClose.addEventListener('click', () => detailModal.classList.remove('open'));
+        detailModal.addEventListener('click', (e) => {
+            if (e.target === detailModal) detailModal.classList.remove('open');
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') detailModal.classList.remove('open');
+        });
+
+        loadRecentImports();
+    </script>
+</body>
+</html>
