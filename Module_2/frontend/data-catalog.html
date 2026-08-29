@@ -7,7 +7,7 @@
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f7fa; color: #2d3748; }
-        
+
         .navbar {
             background: #1a202c;
             color: white;
@@ -27,11 +27,11 @@
             transition: color 0.2s;
         }
         .navbar-links a:hover, .navbar-links a.active { color: white; }
-        
+
         .container { max-width: 1200px; margin: 0 auto; padding: 32px 24px; }
         .page-title { font-size: 24px; font-weight: 700; margin-bottom: 8px; color: #1a202c; }
         .page-subtitle { font-size: 14px; color: #718096; margin-bottom: 24px; }
-        
+
         .toolbar {
             display: flex;
             align-items: center;
@@ -57,14 +57,14 @@
             font-size: 14px;
             min-width: 240px;
         }
-        
+
         .card {
             background: white;
             border-radius: 10px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.08);
             overflow: hidden;
         }
-        
+
         .catalog-table { width: 100%; border-collapse: collapse; }
         .catalog-table th, .catalog-table td { padding: 14px 16px; text-align: left; border-bottom: 1px solid #e2e8f0; }
         .catalog-table th { background: #f7fafc; font-weight: 600; color: #4a5568; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
@@ -72,7 +72,7 @@
         .catalog-table tbody tr { cursor: pointer; transition: background 0.15s; }
         .catalog-table tbody tr:hover { background: #fafbfc; }
         .catalog-table tbody tr:last-child td { border-bottom: none; }
-        
+
         .badge {
             display: inline-block;
             padding: 4px 10px;
@@ -88,12 +88,12 @@
         .badge-already_exists { background: #edf2f7; color: #4a5568; }
         .badge-needs_review { background: #feebc8; color: #744210; }
         .badge-failed { background: #fed7e2; color: #702459; }
-        
+
         .empty-state { text-align: center; padding: 64px 24px; color: #a0aec0; }
         .empty-state-icon { font-size: 48px; margin-bottom: 16px; }
         .empty-state-title { font-size: 16px; font-weight: 600; margin-bottom: 8px; color: #718096; }
         .empty-state-desc { font-size: 14px; }
-        
+
         .loading-state { text-align: center; padding: 64px 24px; color: #718096; }
         .spinner {
             width: 32px; height: 32px;
@@ -104,10 +104,10 @@
             margin: 0 auto 16px;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
-        
+
         .error-state { text-align: center; padding: 64px 24px; color: #742a2a; }
         .error-state button { margin-top: 16px; }
-        
+
         .modal-overlay {
             display: none;
             position: fixed;
@@ -138,13 +138,13 @@
         .modal-close { background: none; border: none; font-size: 24px; cursor: pointer; color: #a0aec0; line-height: 1; }
         .modal-close:hover { color: #2d3748; }
         .modal-body { padding: 24px; }
-        
+
         .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
         .detail-item { display: flex; flex-direction: column; gap: 4px; }
         .detail-label { font-size: 12px; color: #718096; text-transform: uppercase; letter-spacing: 0.5px; }
         .detail-value { font-size: 14px; font-weight: 600; word-break: break-word; }
         .detail-value.unknown { color: #a0aec0; font-weight: 400; font-style: italic; }
-        
+
         .provenance {
             margin-top: 20px;
             padding: 16px;
@@ -172,7 +172,7 @@
         .badge-high { background: #c6f6d5; color: #22543d; }
         .badge-medium { background: #feebc8; color: #744210; }
         .badge-low { background: #fed7e2; color: #702459; }
-        
+
         .error-box {
             margin-top: 12px;
             padding: 12px;
@@ -181,7 +181,7 @@
             color: #742a2a;
             font-size: 14px;
         }
-        
+
         @media (max-width: 768px) {
             .container { padding: 16px; }
             .detail-grid { grid-template-columns: 1fr; }
@@ -208,7 +208,7 @@
         .btn-sm { padding: 6px 12px; font-size: 12px; }
         .btn-danger { background: #e53e3e; }
         .btn-danger:hover { background: #c53030; }
-        
+
         .discovery-panel {
             background: white;
             border-radius: 10px;
@@ -231,7 +231,7 @@
         .badge-full { background: #c6f6d5; color: #22543d; }
         .badge-partial { background: #feebc8; color: #744210; }
         .badge-none { background: #edf2f7; color: #4a5568; }
-        
+
         .workspace-panel {
             background: white;
             border-radius: 10px;
@@ -245,33 +245,33 @@
         .workspace-datasets { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
         .workspace-chip { background: #edf2f7; padding: 6px 12px; border-radius: 6px; font-size: 13px; display: flex; align-items: center; gap: 6px; }
         .workspace-chip button { background: none; border: none; color: #718096; cursor: pointer; font-size: 16px; line-height: 1; }
-        
+
         .capabilities-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin-top: 12px; }
         .capability-card { background: #f7fafc; border-radius: 8px; padding: 12px; }
         .capability-name { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
         .capability-status { font-size: 12px; }
-        
+
         .readiness-badge { display: inline-block; padding: 4px 10px; border-radius: 10px; font-size: 12px; font-weight: 700; }
         .readiness-ready { background: #c6f6d5; color: #22543d; }
         .readiness-partial { background: #feebc8; color: #744210; }
         .readiness-not { background: #fed7e2; color: #702459; }
-        
+
         .recommendation-item { background: #f7fafc; border-radius: 8px; padding: 12px; margin-bottom: 8px; }
         .recommendation-score { font-size: 20px; font-weight: 700; color: #2b6cb0; }
         .recommendation-reasons { font-size: 12px; color: #4a5568; margin-top: 4px; }
-        
+
         .temporal-pair { background: #f7fafc; border-radius: 8px; padding: 12px; margin-bottom: 8px; }
         .temporal-dates { font-size: 13px; color: #2d3748; margin: 4px 0; }
-        
+
         .compat-section { background: #f7fafc; border-radius: 8px; padding: 12px; margin-bottom: 8px; }
         .compat-overall { font-weight: 700; font-size: 14px; margin-top: 8px; }
         .compat-issue { color: #742a2a; font-size: 13px; }
         .compat-warning { color: #744210; font-size: 13px; }
         .compat-rec { color: #2b6cb0; font-size: 13px; }
-        
+
         .error-msg { color: #742a2a; font-size: 13px; margin-top: 8px; }
         .success-msg { color: #22543d; font-size: 13px; margin-top: 8px; }
-        
+
         @media (max-width: 768px) {
             .discovery-grid { grid-template-columns: 1fr 1fr; }
             .capabilities-grid { grid-template-columns: 1fr; }
@@ -407,7 +407,7 @@
     </div>
 
     <script>
-        const API_BASE = '';
+        const API_BASE = 'http://127.0.0.1:8000';
         const SOURCE_LABELS = {
             'xml': 'XML Metadata',
             'geotiff': 'GeoTIFF',
@@ -427,7 +427,7 @@
             const empty = document.getElementById('emptyState');
             const error = document.getElementById('errorState');
             const table = document.getElementById('catalogTable');
-            
+
             loading.style.display = 'block';
             empty.style.display = 'none';
             error.style.display = 'none';
@@ -449,14 +449,14 @@
             const empty = document.getElementById('emptyState');
             const table = document.getElementById('catalogTable');
             const tbody = document.getElementById('catalogBody');
-            
+
             loading.style.display = 'none';
             tbody.innerHTML = '';
 
             let filtered = allDatasets;
             if (currentFilter.search) {
                 const q = currentFilter.search.toLowerCase();
-                filtered = filtered.filter(ds => 
+                filtered = filtered.filter(ds =>
                     (ds.dataset_name || '').toLowerCase().includes(q) ||
                     (ds.original_filename || '').toLowerCase().includes(q) ||
                     (ds.file_path || '').toLowerCase().includes(q)
@@ -490,7 +490,7 @@
                                    status === 'NEEDS_REVIEW' ? 'badge-needs_review' :
                                    status === 'FAILED' ? 'badge-failed' : 'badge-processing';
                 const isSelected = selectedForWorkspace.has(ds.id);
-                
+
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td><input type="checkbox" ${isSelected ? 'checked' : ''} data-id="${ds.id}" class="workspace-select"></td>
@@ -508,7 +508,7 @@
                 });
                 tbody.appendChild(row);
             });
-            
+
             document.querySelectorAll('.workspace-select').forEach(cb => {
                 cb.addEventListener('change', (e) => {
                     const id = parseInt(e.target.dataset.id);
@@ -526,7 +526,7 @@
             try {
                 const response = await fetch(`${API_BASE}/api/datasets/${id}`);
                 const ds = await response.json();
-                
+
                 let html = '<div class="detail-grid">';
                 const fields = [
                     ['Dataset Name', ds.dataset_name],
@@ -565,7 +565,7 @@
                         <strong>Spatial Bounds:</strong> ${ds.min_lon}, ${ds.min_lat} → ${ds.max_lon}, ${ds.max_lat}
                     </div>`;
                 }
-                
+
                 if (ds.metadata_provenance) {
                     html += '<div class="provenance">';
                     html += '<div class="provenance-header" onclick="toggleProv()">';
@@ -573,13 +573,13 @@
                     html += '<span class="provenance-toggle" id="provToggle">Show</span>';
                     html += '</div>';
                     html += '<div class="provenance-body" id="provBody">';
-                    
+
                     const entries = {
                         'Tile': ds.metadata_provenance.tile,
                         'Version': ds.metadata_provenance.version,
                         'Dataset Type': ds.metadata_provenance.dataset_type,
                     };
-                    
+
                     for (const [key, val] of Object.entries(entries)) {
                         if (val) {
                             const conf = (val.confidence || 'UNKNOWN').toLowerCase();
@@ -596,7 +596,7 @@
                     }
                     html += '</div></div>';
                 }
-                
+
                 if (ds.classification && ds.classification.evidence && ds.classification.evidence.length) {
                     html += `<div style="margin-top:16px;padding:12px;background:#f7fafc;border-radius:6px;font-size:14px;">
                         <strong>Classification Evidence</strong>
@@ -631,18 +631,23 @@
                     html += `<button class="btn btn-sm btn-danger" onclick="permanentDeleteDataset(${ds.id})" style="background:#c53030;">Delete Permanently</button>`;
                 }
                 html += `<button class="btn btn-sm" onclick="checkDatasetReadiness(${ds.id})">Check Analysis Readiness</button>`;
+                if (ds.dataset_type === 'DEM' || ds.dataset_type === 'DSM') {
+                    html += `<button class="btn btn-sm" onclick="runTerrainAnalysis(${ds.id})">Run Terrain Analysis</button>`;
+                }
+                html += `<button class="btn btn-sm btn-secondary" onclick="loadPreviousAnalyses(${ds.id})">Previous Analyses</button>`;
                 html += `</div>`;
-                
+
                 html += `<div id="readinessResult-${ds.id}"></div>`;
-                
+                html += `<div id="analysisHistory-${ds.id}" style="margin-top:12px;"></div>`;
+
                 if (ds.error_reason) {
                     html += `<div class="error-box"><strong>Error:</strong> ${ds.error_reason}</div>`;
                 }
-                
+
                 modalBody.innerHTML = html;
                 detailModal.classList.add('open');
             } catch (e) {
-                alert('Could not load dataset details');
+                alert('Could not load dataset details: ' + e.message);
             }
         }
 
@@ -702,21 +707,39 @@
 
         async function softDeleteDataset(id) {
             if (!confirm('Soft delete this dataset? It can be restored later.')) return;
-            const res = await fetch(`${API_BASE}/api/datasets/${id}`, { method: 'DELETE' });
-            if (res.ok) { alert('Soft deleted'); detailModal.classList.remove('open'); loadCatalog(); } else { alert('Failed'); }
+            try {
+                const res = await fetch(`${API_BASE}/api/datasets/${id}`, { method: 'DELETE' });
+                const data = await res.json();
+                if (res.ok) { alert('Soft deleted'); detailModal.classList.remove('open'); loadCatalog(); }
+                else { alert('Failed: ' + (data.detail || data.error || 'Unknown error')); }
+            } catch (e) {
+                alert('Failed: ' + e.message);
+            }
         }
 
         async function permanentDeleteDataset(id) {
             if (!confirm('PERMANENTLY DELETE this dataset? This will permanently remove all files and data. This cannot be undone.')) return;
             if (!confirm('Are you absolutely sure? All files will be permanently destroyed.')) return;
-            const res = await fetch(`${API_BASE}/api/datasets/${id}?permanent=true`, { method: 'DELETE' });
-            if (res.ok) { alert('Permanently deleted'); detailModal.classList.remove('open'); loadCatalog(); } else { alert('Failed'); }
+            try {
+                const res = await fetch(`${API_BASE}/api/datasets/${id}?permanent=true`, { method: 'DELETE' });
+                const data = await res.json();
+                if (res.ok) { alert('Permanently deleted'); detailModal.classList.remove('open'); loadCatalog(); }
+                else { alert('Failed: ' + (data.detail || data.error || 'Unknown error')); }
+            } catch (e) {
+                alert('Failed: ' + e.message);
+            }
         }
 
         async function restoreDataset(id) {
             if (!confirm('Restore this dataset?')) return;
-            const res = await fetch(`${API_BASE}/api/datasets/${id}/restore`, { method: 'POST' });
-            if (res.ok) { alert('Restored'); detailModal.classList.remove('open'); loadCatalog(); } else { alert('Failed'); }
+            try {
+                const res = await fetch(`${API_BASE}/api/datasets/${id}/restore`, { method: 'POST' });
+                const data = await res.json();
+                if (res.ok) { alert('Restored'); detailModal.classList.remove('open'); loadCatalog(); }
+                else { alert('Failed: ' + (data.detail || data.error || 'Unknown error')); }
+            } catch (e) {
+                alert('Failed: ' + e.message);
+            }
         }
 
         async function reclassifyDataset(id) {
@@ -759,12 +782,12 @@
             const panel = document.getElementById('workspacePanel');
             const meta = document.getElementById('workspaceMeta');
             const container = document.getElementById('workspaceDatasets');
-            
+
             if (selectedForWorkspace.size === 0) {
                 panel.style.display = 'none';
                 return;
             }
-            
+
             panel.style.display = 'block';
             const dsList = allDatasets.filter(ds => selectedForWorkspace.has(ds.id));
             meta.textContent = `${dsList.length} dataset(s) selected for analysis`;
@@ -821,10 +844,10 @@
             hideDiscoveryError();
             const area = getArea();
             if (!area) return;
-            
+
             document.getElementById('areaSearchResults').innerHTML = '<div class="loading-state"><div class="spinner"></div><div>Searching...</div></div>';
             document.getElementById('discoveryResults').style.display = 'block';
-            
+
             try {
                 const res = await fetch(`${API_BASE}/api/datasets/search/area`, {
                     method: 'POST',
@@ -833,11 +856,11 @@
                 });
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.detail || 'Search failed');
-                
+
                 const full = data.fully_covering || [];
                 const partial = data.partially_overlapping || [];
                 const nearby = data.nearby || [];
-                
+
                 let html = '';
                 if (full.length === 0 && partial.length === 0) {
                     html = '<div class="empty-state"><div class="empty-state-title">No datasets found</div><div class="empty-state-desc">Try expanding the boundary or importing additional spatial data.</div></div>';
@@ -845,11 +868,11 @@
                     html += `<div class="discovery-section"><h3>FULL COVERAGE (${full.length})</h3>`;
                     full.forEach(ds => { html += renderDiscoveryCard(ds, 'full_coverage'); });
                     html += '</div>';
-                    
+
                     html += `<div class="discovery-section"><h3>PARTIAL OVERLAP (${partial.length})</h3>`;
                     partial.forEach(ds => { html += renderDiscoveryCard(ds, 'partial_overlap'); });
                     html += '</div>';
-                    
+
                     if (nearby.length > 0) {
                         html += `<div class="discovery-section"><h3>NEARBY (${nearby.length})</h3>`;
                         nearby.forEach(ds => { html += renderDiscoveryCard(ds, 'none'); });
@@ -899,10 +922,10 @@
             hideDiscoveryError();
             const area = getArea();
             if (!area) return;
-            
+
             document.getElementById('capabilitiesResults').innerHTML = '<div class="loading-state"><div class="spinner"></div><div>Evaluating capabilities...</div></div>';
             document.getElementById('discoveryResults').style.display = 'block';
-            
+
             try {
                 const res = await fetch(`${API_BASE}/api/datasets/capabilities`, {
                     method: 'POST',
@@ -911,7 +934,7 @@
                 });
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.detail || 'Capabilities check failed');
-                
+
                 let html = '<div class="discovery-section"><h3>Available Analysis</h3><div class="capabilities-grid">';
                 (data.capabilities || []).forEach(cap => {
                     const available = cap.available;
@@ -936,10 +959,10 @@
             if (!area) return;
             const analysis = prompt('Enter analysis type (terrain, slope, vegetation, etc.):', 'terrain');
             if (!analysis) return;
-            
+
             document.getElementById('recommendationResults').innerHTML = '<div class="loading-state"><div class="spinner"></div><div>Ranking datasets...</div></div>';
             document.getElementById('discoveryResults').style.display = 'block';
-            
+
             try {
                 const res = await fetch(`${API_BASE}/api/datasets/recommend`, {
                     method: 'POST',
@@ -948,7 +971,7 @@
                 });
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.detail || 'Recommendation failed');
-                
+
                 let html = `<div class="discovery-section"><h3>Best Dataset for ${analysis}</h3>`;
                 if (data.recommended && data.recommended.length > 0) {
                     data.recommended.forEach((rec, idx) => {
@@ -979,10 +1002,10 @@
             if (!area) return;
             const datasetType = prompt('Enter dataset type for temporal pairing (LULC, NDVI, etc.):', 'LULC');
             if (!datasetType) return;
-            
+
             document.getElementById('temporalPairsResults').innerHTML = '<div class="loading-state"><div class="spinner"></div><div>Finding temporal pairs...</div></div>';
             document.getElementById('discoveryResults').style.display = 'block';
-            
+
             try {
                 const res = await fetch(`${API_BASE}/api/datasets/temporal-pairs`, {
                     method: 'POST',
@@ -991,7 +1014,7 @@
                 });
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.detail || 'Temporal pairs search failed');
-                
+
                 let html = '<div class="discovery-section"><h3>Change Detection Pairs</h3>';
                 if (data.pairs && data.pairs.length > 0) {
                     data.pairs.forEach((pair, idx) => {
@@ -1020,9 +1043,9 @@
                 document.getElementById('workspaceResults').innerHTML = '<div class="error-msg">Select at least 2 datasets for compatibility check.</div>';
                 return;
             }
-            
+
             document.getElementById('workspaceResults').innerHTML = '<div class="loading-state"><div class="spinner"></div><div>Checking compatibility...</div></div>';
-            
+
             try {
                 const res = await fetch(`${API_BASE}/api/datasets/compatibility`, {
                     method: 'POST',
@@ -1031,7 +1054,7 @@
                 });
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.detail || 'Compatibility check failed');
-                
+
                 let html = '<div class="compat-section"><strong>Compatibility Report</strong>';
                 html += `<div class="compat-overall" style="color:${data.compatible ? '#22543d' : '#742a2a'}">${data.compatible ? 'COMPATIBLE' : 'INCOMPATIBLE'}</div>`;
                 if (data.issues && data.issues.length) {
@@ -1061,9 +1084,9 @@
             }
             const analysis = prompt('Enter analysis type (terrain, slope, vegetation, etc.):', 'terrain');
             if (!analysis) return;
-            
+
             document.getElementById('workspaceResults').innerHTML = '<div class="loading-state"><div class="spinner"></div><div>Checking readiness...</div></div>';
-            
+
             try {
                 const res = await fetch(`${API_BASE}/api/datasets/readiness`, {
                     method: 'POST',
@@ -1072,13 +1095,15 @@
                 });
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.detail || 'Readiness check failed');
-                
+
                 const badgeClass = data.ready ? 'readiness-ready' : 'readiness-not';
                 const label = data.ready ? 'READY' : (data.readiness_score > 0 ? 'PARTIALLY READY' : 'NOT READY');
                 let html = `<div class="compat-section">
                     <strong>Analysis Readiness: ${analysis}</strong>
                     <div style="margin-top:8px;"><span class="readiness-badge ${badgeClass}">${label}</span> Score: ${data.readiness_score}%</div>
                     ${data.datasets && data.datasets.length ? `<div style="margin-top:8px;font-size:13px;">Datasets: ${data.datasets.map(d => d.dataset_type + ' (' + d.coverage_percentage + '%)').join(', ')}</div>` : ''}
+                    ${data.errors && data.errors.length ? `<div style="margin-top:8px;font-size:13px;color:#742a2a;">Errors: ${data.errors.map(e => e.message || e).join(', ')}</div>` : ''}
+                    ${data.warnings && data.warnings.length ? `<div style="margin-top:8px;font-size:13px;color:#744210;">Warnings: ${data.warnings.map(w => w.message || w).join(', ')}</div>` : ''}
                     ${data.missing_requirements && data.missing_requirements.length ? `<div style="margin-top:8px;font-size:13px;color:#742a2a;">Missing: ${data.missing_requirements.join(', ')}</div>` : ''}
                 </div>`;
                 document.getElementById('workspaceResults').innerHTML = html;
@@ -1098,9 +1123,9 @@
             }
             const analysis = prompt('Enter analysis type (terrain, slope, vegetation, etc.):', 'terrain');
             if (!analysis) return;
-            
+
             document.getElementById('workspaceResults').innerHTML = '<div class="loading-state"><div class="spinner"></div><div>Preparing analysis package...</div></div>';
-            
+
             try {
                 const res = await fetch(`${API_BASE}/api/datasets/prepare-analysis`, {
                     method: 'POST',
@@ -1109,27 +1134,58 @@
                 });
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.detail || data.error || 'Preparation failed');
-                
-                let html = '<div class="compat-section"><strong>Analysis Package Ready</strong>';
-                html += `<div style="margin-top:8px;font-size:13px;">Status: <strong>${data.status}</strong> · Analysis: ${data.analysis}</div>`;
+
+                let html = '<div class="compat-section"><strong>Analysis Package</strong>';
+                html += `<div style="margin-top:8px;font-size:13px;">Status: <strong>${data.status}</strong> · Analysis: ${data.analysis} · Ready: ${data.ready_for_analysis ? 'Yes' : 'No'}</div>`;
+
+                if (data.errors && data.errors.length) {
+                    html += '<div style="margin-top:8px;color:#742a2a;"><strong>Errors:</strong>';
+                    data.errors.forEach(err => {
+                        html += `<div style="font-size:13px;">• ${err.code || ''}: ${err.message || err}</div>`;
+                    });
+                    html += '</div>';
+                }
+
+                if (data.warnings && data.warnings.length) {
+                    html += '<div style="margin-top:8px;color:#744210;"><strong>Warnings:</strong>';
+                    data.warnings.forEach(w => {
+                        html += `<div style="font-size:13px;">• ${w.code || ''}: ${w.message || w}</div>`;
+                    });
+                    html += '</div>';
+                }
+
                 if (data.datasets && data.datasets.length) {
-                    html += '<div style="margin-top:8px;"><strong>Datasets:</strong>';
+                    html += '<div style="margin-top:12px;"><strong>Datasets:</strong>';
                     data.datasets.forEach(ds => {
-                        html += `<div style="margin-top:4px;padding:8px;background:white;border-radius:6px;font-size:13px;">
-                            <strong>${ds.dataset_type}</strong> (ID: ${ds.dataset_id})<br>
-                            Location: ${ds.location || 'N/A'}<br>
-                            Coverage: ${ds.coverage_percentage != null ? ds.coverage_percentage + '%' : 'N/A'} ·
-                            Quality: ${ds.quality_score != null ? ds.quality_score + '/100' : 'N/A'}
-                            ${ds.files && ds.files.length ? `<br>Files: ${ds.files.map(f => f.path).join(', ')}` : ''}
+                        const statusIcon = ds.ready_for_analysis ? '✓' : '⚠';
+                        const statusColor = ds.ready_for_analysis ? '#22543d' : '#744210';
+                        html += `<div style="margin-top:8px;padding:12px;background:white;border-radius:6px;font-size:13px;border:1px solid #e2e8f0;">
+                            <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+                                <span style="color:${statusColor};font-size:16px;">${statusIcon}</span>
+                                <strong>${ds.dataset_name || 'Unknown'}</strong>
+                                <span style="margin-left:auto;font-size:11px;color:#718096;">ID: ${ds.dataset_id}</span>
+                            </div>
+                            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:4px;">
+                                <div><span style="color:#718096;">Type:</span> ${ds.dataset_type || 'N/A'}</div>
+                                <div><span style="color:#718096;">Theme:</span> ${ds.theme || 'N/A'}</div>
+                                <div><span style="color:#718096;">Tile:</span> ${ds.tile || 'N/A'}</div>
+                                <div><span style="color:#718096;">Version:</span> ${ds.version || 'N/A'}</div>
+                                <div><span style="color:#718096;">Resolution:</span> ${ds.resolution || 'N/A'}</div>
+                                <div><span style="color:#718096;">Format:</span> ${ds.format || 'N/A'}</div>
+                                <div><span style="color:#718096;">CRS:</span> ${ds.crs || 'N/A'}</div>
+                                <div><span style="color:#718096;">Coverage:</span> ${ds.coverage_percentage != null ? ds.coverage_percentage + '%' : 'N/A'}</div>
+                                <div><span style="color:#718096;">Dir:</span> ${ds.directory_exists ? 'Yes' : 'MISSING'}</div>
+                                <div><span style="color:#718096;">Manifest:</span> ${ds.manifest_exists ? (ds.manifest_valid ? 'Valid' : 'Invalid') : 'Missing'}</div>
+                            </div>
+                            ${ds.files && ds.files.length ? `<div style="margin-top:6px;font-size:12px;color:#4a5568;">Files: ${ds.files.map(f => f.name + (f.exists ? '' : ' (MISSING)')).join(', ')}</div>` : ''}
+                            ${ds.errors && ds.errors.length ? `<div style="margin-top:6px;font-size:12px;color:#742a2a;">Errors: ${ds.errors.map(e => e.message).join(', ')}</div>` : ''}
                         </div>`;
                     });
                     html += '</div>';
                 }
+
                 if (data.missing_requirements && data.missing_requirements.length) {
                     html += `<div style="margin-top:8px;color:#742a2a;">Missing requirements: ${data.missing_requirements.join(', ')}</div>`;
-                }
-                if (data.warnings && data.warnings.length) {
-                    html += `<div style="margin-top:8px;color:#744210;">Warnings: ${data.warnings.join(', ')}</div>`;
                 }
                 html += `<div style="margin-top:12px;"><button class="btn btn-sm" onclick="sendToModule1()">Send to Module 1</button></div>`;
                 html += '</div>';
@@ -1150,7 +1206,7 @@
             }
             const analysis = prompt('Enter analysis type for Module 1:', 'terrain');
             if (!analysis) return;
-            
+
             const pkg = {
                 area,
                 analysis,
@@ -1158,7 +1214,7 @@
                 source: 'spatial-catalog',
                 timestamp: new Date().toISOString(),
             };
-            
+
             console.log('Analysis package for Module 1:', pkg);
             alert('Analysis package prepared. Check browser console for the Module 1 request object.\n\nIn a production environment, this would navigate to or call Module 1 with the prepared data.');
         }
@@ -1166,7 +1222,7 @@
         async function checkDatasetReadiness(id) {
             const ds = allDatasets.find(d => d.id === id);
             if (!ds) return;
-            
+
             const area = {
                 west: ds.min_lon || 0,
                 south: ds.min_lat || 0,
@@ -1175,10 +1231,10 @@
             };
             const analysis = prompt('Enter analysis type (terrain, slope, vegetation, etc.):', 'terrain');
             if (!analysis) return;
-            
+
             const container = document.getElementById(`readinessResult-${id}`);
             container.innerHTML = '<div class="loading-state"><div class="spinner"></div><div>Checking readiness...</div></div>';
-            
+
             try {
                 const res = await fetch(`${API_BASE}/api/datasets/readiness`, {
                     method: 'POST',
@@ -1187,19 +1243,222 @@
                 });
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.detail || 'Readiness check failed');
-                
+
                 const badgeClass = data.ready ? 'readiness-ready' : 'readiness-not';
                 const label = data.ready ? 'READY' : (data.readiness_score > 0 ? 'PARTIALLY READY' : 'NOT READY');
                 let html = `<div class="compat-section" style="margin-top:12px;">
                     <strong>Analysis Readiness: ${analysis}</strong>
                     <div style="margin-top:8px;"><span class="readiness-badge ${badgeClass}">${label}</span> Score: ${data.readiness_score}%</div>
                     ${data.datasets && data.datasets.length ? `<div style="margin-top:8px;font-size:13px;">Matched datasets: ${data.datasets.map(d => d.dataset_type + ' (' + d.coverage_percentage + '%)').join(', ')}</div>` : ''}
+                    ${data.errors && data.errors.length ? `<div style="margin-top:8px;font-size:13px;color:#742a2a;">Errors: ${data.errors.map(e => e.message || e).join(', ')}</div>` : ''}
+                    ${data.warnings && data.warnings.length ? `<div style="margin-top:8px;font-size:13px;color:#744210;">Warnings: ${data.warnings.map(w => w.message || w).join(', ')}</div>` : ''}
                     ${data.missing_requirements && data.missing_requirements.length ? `<div style="margin-top:8px;font-size:13px;color:#742a2a;">Missing: ${data.missing_requirements.join(', ')}</div>` : ''}
                 </div>`;
                 container.innerHTML = html;
             } catch (e) {
                 container.innerHTML = `<div class="error-msg">Readiness check failed: ${e.message}</div>`;
                 console.error('Readiness error:', e);
+            }
+        }
+
+        async function loadPreviousAnalyses(datasetId) {
+            const container = document.getElementById(`analysisHistory-${datasetId}`);
+            container.innerHTML = '<div class="loading-state"><div class="spinner"></div><div>Loading previous analyses...</div></div>';
+
+            try {
+                const res = await fetch(`${API_BASE}/api/analysis/results?dataset_id=${datasetId}`);
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.detail || 'Failed to load analyses');
+
+                const results = data.results || [];
+                if (results.length === 0) {
+                    container.innerHTML = '<div style="margin-top:8px;font-size:13px;color:#718096;">No previous analyses found.</div>';
+                    return;
+                }
+
+                let html = '<div style="margin-top:12px;"><strong>Previous Analyses</strong>';
+                html += '<div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">';
+                results.forEach(r => {
+                    const date = r.created_at ? new Date(r.created_at).toLocaleString() : 'Unknown date';
+                    html += `<div style="padding:10px;background:white;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;cursor:pointer;" onclick="viewAnalysisResult('${r.analysis_id}')">`;
+                    html += `<div style="display:flex;align-items:center;justify-content:space-between;">`;
+                    html += `<div><strong>${r.analysis_type || 'analysis'}</strong> · ${r.status}</div>`;
+                    html += `<div style="font-size:11px;color:#718096;">${date}</div>`;
+                    html += `</div>`;
+                    html += `<div style="font-size:12px;color:#4a5568;margin-top:4px;">ID: ${r.analysis_id.substring(0, 8)}...</div>`;
+                    html += `</div>`;
+                });
+                html += '</div></div>';
+                container.innerHTML = html;
+            } catch (e) {
+                container.innerHTML = `<div class="error-msg">Failed to load analyses: ${e.message}</div>`;
+            }
+        }
+
+        async function viewAnalysisResult(analysisId) {
+            try {
+                const res = await fetch(`${API_BASE}/api/analysis/results/${analysisId}`);
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.detail || 'Failed to load analysis');
+
+                const container = document.getElementById(`analysisResult-${analysisId}`);
+                let html = `<div class="compat-section" style="margin-top:12px;">`;
+                html += `<strong>Analysis Result: ${analysisId.substring(0, 8)}...</strong>`;
+                html += `<div style="margin-top:8px;font-size:13px;">Status: ${data.status} · Type: ${data.analysis_type} · Dataset: ${data.dataset_name || data.dataset_id}</div>`;
+
+                if (data.source) {
+                    html += '<div style="margin-top:8px;padding:10px;background:#f7fafc;border-radius:6px;font-size:13px;">';
+                    html += `<strong>Source:</strong> CRS: ${data.source.crs || 'N/A'} · Bounds: ${data.source.bounds ? `${data.source.bounds.west}, ${data.source.bounds.south} → ${data.source.bounds.east}, ${data.source.bounds.north}` : 'N/A'}`;
+                    html += '</div>';
+                }
+
+                if (data.statistics) {
+                    if (data.statistics.elevation) {
+                        const e = data.statistics.elevation;
+                        html += '<div style="margin-top:8px;padding:10px;background:white;border-radius:6px;border:1px solid #e2e8f0;">';
+                        html += '<strong style="font-size:13px;">Elevation</strong>';
+                        html += `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:4px;margin-top:6px;font-size:13px;">`;
+                        html += `<div>Min: <strong>${e.min != null ? e.min.toFixed(1) : 'N/A'}</strong></div>`;
+                        html += `<div>Max: <strong>${e.max != null ? e.max.toFixed(1) : 'N/A'}</strong></div>`;
+                        html += `<div>Mean: <strong>${e.mean != null ? e.mean.toFixed(1) : 'N/A'}</strong></div>`;
+                        html += `</div></div>`;
+                    }
+                    if (data.statistics.slope) {
+                        const s = data.statistics.slope;
+                        html += '<div style="margin-top:8px;padding:10px;background:white;border-radius:6px;border:1px solid #e2e8f0;">';
+                        html += '<strong style="font-size:13px;">Slope</strong>';
+                        html += `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:4px;margin-top:6px;font-size:13px;">`;
+                        html += `<div>Min: <strong>${s.min != null ? s.min.toFixed(1) : 'N/A'}°</strong></div>`;
+                        html += `<div>Max: <strong>${s.max != null ? s.max.toFixed(1) : 'N/A'}°</strong></div>`;
+                        html += `<div>Mean: <strong>${s.mean != null ? s.mean.toFixed(1) : 'N/A'}°</strong></div>`;
+                        html += `</div></div>`;
+                    }
+                }
+
+                if (data.outputs) {
+                    html += '<div style="margin-top:8px;font-size:12px;color:#4a5568;"><strong>Outputs:</strong> ';
+                    const outputEntries = Object.entries(data.outputs).filter(([k, v]) => v && v.exists);
+                    if (outputEntries.length > 0) {
+                        html += outputEntries.map(([k, v]) => `${k}: <a href="${API_BASE}/${v.path}" target="_blank">${v.path.split('/').pop()}</a>`).join(', ');
+                    } else {
+                        html += 'None';
+                    }
+                    html += '</div>';
+                }
+
+                if (data.errors && data.errors.length) {
+                    html += '<div style="margin-top:8px;color:#742a2a;font-size:13px;">Errors: ' + data.errors.map(e => e.message || e).join(', ') + '</div>';
+                }
+                if (data.warnings && data.warnings.length) {
+                    html += '<div style="margin-top:8px;color:#744210;font-size:13px;">Warnings: ' + data.warnings.map(w => w.message || w).join(', ') + '</div>';
+                }
+
+                html += '</div>';
+
+                const existing = document.getElementById(`analysisResult-${analysisId}`);
+                if (existing) {
+                    existing.innerHTML = html;
+                    existing.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    const div = document.createElement('div');
+                    div.id = `analysisResult-${analysisId}`;
+                    div.innerHTML = html;
+                    container.appendChild(div);
+                    div.scrollIntoView({ behavior: 'smooth' });
+                }
+            } catch (e) {
+                alert('Failed to load analysis: ' + e.message);
+            }
+        }
+
+        async function runTerrainAnalysis(id) {
+            const container = document.getElementById(`readinessResult-${id}`);
+            container.innerHTML = '<div class="loading-state"><div class="spinner"></div><div>Running terrain analysis...</div></div>';
+
+            try {
+                const res = await fetch(`${API_BASE}/api/analysis/terrain`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ dataset_id: id, analysis: 'terrain', options: { slope: true, aspect: true, hillshade: true } }),
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.detail || data.error || 'Analysis failed');
+
+                let html = '<div class="compat-section" style="margin-top:12px;">';
+                html += `<strong>Terrain Analysis: ${data.dataset_name || 'Dataset ' + data.dataset_id}</strong>`;
+                html += `<div style="margin-top:8px;font-size:13px;">Status: <strong>${data.status}</strong> · Type: ${data.dataset_type} · ID: ${data.analysis_id ? data.analysis_id.substring(0, 8) : 'N/A'}</div>`;
+
+                if (data.source) {
+                    html += '<div style="margin-top:8px;padding:10px;background:#f7fafc;border-radius:6px;font-size:13px;">';
+                    html += `<strong>Source:</strong> CRS: ${data.source.crs || 'N/A'} · Bounds: ${data.source.bounds ? `${data.source.bounds.west}, ${data.source.bounds.south} → ${data.source.bounds.east}, ${data.source.bounds.north}` : 'N/A'}`;
+                    html += '</div>';
+                }
+
+                if (data.statistics) {
+                    if (data.statistics.elevation) {
+                        const e = data.statistics.elevation;
+                        html += '<div style="margin-top:10px;padding:10px;background:white;border-radius:6px;border:1px solid #e2e8f0;">';
+                        html += '<strong style="font-size:13px;">Elevation</strong>';
+                        html += `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:4px;margin-top:6px;font-size:13px;">`;
+                        html += `<div>Min: <strong>${e.min != null ? e.min.toFixed(1) : 'N/A'}</strong></div>`;
+                        html += `<div>Max: <strong>${e.max != null ? e.max.toFixed(1) : 'N/A'}</strong></div>`;
+                        html += `<div>Mean: <strong>${e.mean != null ? e.mean.toFixed(1) : 'N/A'}</strong></div>`;
+                        html += `<div>Valid pixels: <strong>${e.valid_pixels || 0}</strong></div>`;
+                        html += `</div></div>`;
+                    }
+                    if (data.statistics.slope) {
+                        const s = data.statistics.slope;
+                        html += '<div style="margin-top:8px;padding:10px;background:white;border-radius:6px;border:1px solid #e2e8f0;">';
+                        html += '<strong style="font-size:13px;">Slope</strong>';
+                        html += `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:4px;margin-top:6px;font-size:13px;">`;
+                        html += `<div>Min: <strong>${s.min != null ? s.min.toFixed(1) : 'N/A'}°</strong></div>`;
+                        html += `<div>Max: <strong>${s.max != null ? s.max.toFixed(1) : 'N/A'}°</strong></div>`;
+                        html += `<div>Mean: <strong>${s.mean != null ? s.mean.toFixed(1) : 'N/A'}°</strong></div>`;
+                        html += `</div></div>`;
+                    }
+                    if (data.statistics.aspect && data.statistics.aspect.available) {
+                        html += '<div style="margin-top:8px;padding:10px;background:white;border-radius:6px;border:1px solid #e2e8f0;">';
+                        html += '<strong style="font-size:13px;">Aspect</strong>';
+                        html += `<div style="font-size:13px;margin-top:6px;">Available · Range: ${data.statistics.aspect.min.toFixed(0)}° - ${data.statistics.aspect.max.toFixed(0)}°</div>`;
+                        html += '</div>';
+                    }
+                    if (data.statistics.hillshade && data.statistics.hillshade.available) {
+                        html += '<div style="margin-top:8px;padding:10px;background:white;border-radius:6px;border:1px solid #e2e8f0;">';
+                        html += '<strong style="font-size:13px;">Hillshade</strong>';
+                        html += `<div style="font-size:13px;margin-top:6px;">Mean: ${data.statistics.hillshade.mean.toFixed(3)} · Range: ${data.statistics.hillshade.min.toFixed(3)} - ${data.statistics.hillshade.max.toFixed(3)}</div>`;
+                        html += '</div>';
+                    }
+                }
+
+                if (data.outputs) {
+                    html += '<div style="margin-top:8px;font-size:12px;color:#4a5568;"><strong>Outputs:</strong> ';
+                    const outputEntries = Object.entries(data.outputs).filter(([k, v]) => v && v.exists);
+                    if (outputEntries.length > 0) {
+                        html += outputEntries.map(([k, v]) => `${k}: GeoTIFF`).join(', ');
+                    } else {
+                        html += 'None generated';
+                    }
+                    html += '</div>';
+                }
+
+                if (data.spatial) {
+                    html += '<div style="margin-top:8px;padding:10px;background:#f7fafc;border-radius:6px;font-size:13px;">';
+                    html += `<strong>Spatial:</strong> CRS: ${data.spatial.crs || 'N/A'} · Resolution: ${data.spatial.resolution ? data.spatial.resolution.x + ' x ' + data.spatial.resolution.y : 'N/A'} · ${data.spatial.width}x${data.spatial.height}`;
+                    html += '</div>';
+                }
+
+                if (data.errors && data.errors.length) {
+                    html += '<div style="margin-top:8px;color:#742a2a;font-size:13px;">Errors: ' + data.errors.map(e => e.message || e).join(', ') + '</div>';
+                }
+                if (data.warnings && data.warnings.length) {
+                    html += '<div style="margin-top:8px;color:#744210;font-size:13px;">Warnings: ' + data.warnings.map(w => w.message || w).join(', ') + '</div>';
+                }
+
+                html += '</div>';
+                container.innerHTML = html;
+            } catch (e) {
+                container.innerHTML = `<div class="error-msg">Terrain analysis failed: ${e.message}</div>`;
+                console.error('Terrain analysis error:', e);
             }
         }
 

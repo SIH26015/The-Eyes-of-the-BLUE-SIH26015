@@ -10,9 +10,6 @@ import numpy as np
 import rasterio
 from rasterio.transform import from_bounds
 
-import sys
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "backend"))
-
 from app.ingestion.metadata.xml_parser import parse_xml, parse_bhuvan_xml
 from app.ingestion.metadata.geotiff_reader import read_geotiff_metadata
 from app.ingestion.inspector import inspect_dataset
@@ -2236,3 +2233,676 @@ class TestEndToEndDatasetLifecycle:
             assert final_count == 0
         finally:
             datasets_module.BASE_DIR = original_base
+
+
+class TestAPIErrorHandling:
+    @pytest.fixture
+    def tmp_workspace(self, tmp_path):
+        base = tmp_path / "workspace"
+        base.mkdir()
+        (base / "data" / "incoming").mkdir(parents=True)
+        (base / "data" / "processing").mkdir(parents=True)
+        (base / "data" / "catalog").mkdir(parents=True)
+        (base / "data" / "raw").mkdir(parents=True)
+        return base
+
+    def _init_db(self, tmp_workspace):
+        from backend.app.ingestion.catalog import init_db
+        init_db(str(tmp_workspace))
+
+    def _create_bhuvan_zip(self, tmp_workspace, name="error_test.zip"):
+        zip_path = tmp_workspace / "data" / "incoming" / name
+        with zipfile.ZipFile(zip_path, "w") as zf:
+            zf.writestr("metadata.xml", """<?xml version="1.0"?>
+<metadata tileno="e43g">
+    <Data_Identification_Information>
+        <Name_of_the_Dataset>Error_Test_V1</Name_of_the_Dataset>
+        <Theme>Terrain</Theme>
+        <Keywords>Cartosat-1,DEM,Stereodata,India,ISRO,NRSC</Keywords>
+        <Data_Type>Elevation</Data_Type>
+    </Data_Identification_Information>
+    <Coverage>
+        <Upper_left>X = 72E, Y = 19N</Upper_left>
+        <Upper_right>X = 73E, Y = 19N</Upper_right>
+        <Lower_right>X = 73E, Y = 18N</Lower_right>
+        <Lower_left>X = 72E, Y = 18N</Lower_left>
+    </Coverage>
+    <Citation><Lineage><Tile_Name>e43g</Tile_Name><Resolution>1 arc sec</Resolution><File_Format>Geotiff</File_Format></Lineage></Citation>
+    <Dataset_Topic_Category><Data_Identification_topic_category>Digital Elevation Model</Data_Identification_topic_category></Dataset_Topic_Category>
+    <For_Image_Data>
+        <Name_of_the_Satellite>Cartosat-1</Name_of_the_Satellite>
+        <Sensor>PAN(2.5m) Stereo Data</Sensor>
+        <File_Format>Geotiff</File_Format>
+        <Bits_per_Pixel>16bit</Bits_per_Pixel>
+        <Spatial_Resolution>1arc sec</Spatial_Resolution>
+    </For_Image_Data>
+</metadata>
+""")
+            data = np.ones((10, 10), dtype=np.float32)
+            transform = from_bounds(72.0, 18.0, 73.0, 19.0, 10, 10)
+            with rasterio.open(
+                str(tmp_workspace / "dem.tif"),
+                "w",
+                driver="GTiff",
+                height=10,
+                width=10,
+                count=1,
+                dtype=data.dtype,
+                crs="EPSG:4326",
+                transform=transform,
+            ) as dst:
+                dst.write(data, 1)
+            with open(str(tmp_workspace / "dem.tif"), "rb") as f:
+                zf.writestr("dem.tif", f.read())
+        return zip_path
+
+    def test_get_nonexistent_dataset_returns_404(self, tmp_workspace):
+        from fastapi.testclient import TestClient
+        from backend.app.main import app
+        from backend.app.api import datasets as datasets_module
+
+        self._init_db(tmp_workspace)
+        original_base = datasets_module.BASE_DIR
+        datasets_module.BASE_DIR = Path(str(tmp_workspace))
+        try:
+            client = TestClient(app)
+            response = client.get("/api/datasets/99999")
+        finally:
+            datasets_module.BASE_DIR = original_base
+        assert response.status_code == 404
+
+    def test_rename_nonexistent_dataset_returns_404(self, tmp_workspace):
+        from fastapi.testclient import TestClient
+        from backend.app.main import app
+        from backend.app.api import datasets as datasets_module
+
+        self._init_db(tmp_workspace)
+        original_base = datasets_module.BASE_DIR
+        datasets_module.BASE_DIR = Path(str(tmp_workspace))
+        try:
+            client = TestClient(app)
+            response = client.put("/api/datasets/99999/rename", json={"dataset_name": "New Name"})
+        finally:
+            datasets_module.BASE_DIR = original_base
+        assert response.status_code == 404
+
+    def test_classify_nonexistent_dataset_returns_404(self, tmp_workspace):
+        from fastapi.testclient import TestClient
+        from backend.app.main import app
+        from backend.app.api import datasets as datasets_module
+
+        self._init_db(tmp_workspace)
+        original_base = datasets_module.BASE_DIR
+        datasets_module.BASE_DIR = Path(str(tmp_workspace))
+        try:
+            client = TestClient(app)
+            response = client.put("/api/datasets/99999/classify", json={"dataset_type": "DEM"})
+        finally:
+            datasets_module.BASE_DIR = original_base
+        assert response.status_code == 404
+
+    def test_reprocess_nonexistent_dataset_returns_400(self, tmp_workspace):
+        from fastapi.testclient import TestClient
+        from backend.app.main import app
+        from backend.app.api import datasets as datasets_module
+
+        self._init_db(tmp_workspace)
+        original_base = datasets_module.BASE_DIR
+        datasets_module.BASE_DIR = Path(str(tmp_workspace))
+        try:
+            client = TestClient(app)
+            response = client.post("/api/datasets/99999/reprocess")
+        finally:
+            datasets_module.BASE_DIR = original_base
+        assert response.status_code == 400
+
+    def test_delete_nonexistent_dataset_returns_404(self, tmp_workspace):
+        from fastapi.testclient import TestClient
+        from backend.app.main import app
+        from backend.app.api import datasets as datasets_module
+
+        self._init_db(tmp_workspace)
+        original_base = datasets_module.BASE_DIR
+        datasets_module.BASE_DIR = Path(str(tmp_workspace))
+        try:
+            client = TestClient(app)
+            response = client.delete("/api/datasets/99999")
+        finally:
+            datasets_module.BASE_DIR = original_base
+        assert response.status_code == 404
+
+    def test_restore_nonexistent_dataset_returns_404(self, tmp_workspace):
+        from fastapi.testclient import TestClient
+        from backend.app.main import app
+        from backend.app.api import datasets as datasets_module
+
+        self._init_db(tmp_workspace)
+        original_base = datasets_module.BASE_DIR
+        datasets_module.BASE_DIR = Path(str(tmp_workspace))
+        try:
+            client = TestClient(app)
+            response = client.post("/api/datasets/99999/restore")
+        finally:
+            datasets_module.BASE_DIR = original_base
+        assert response.status_code == 404
+
+    def test_rename_empty_name_returns_400(self, tmp_workspace):
+        from fastapi.testclient import TestClient
+        from backend.app.main import app
+        from backend.app.api import datasets as datasets_module
+
+        zip_path = self._create_bhuvan_zip(tmp_workspace)
+        result = ingest_dataset(str(zip_path), str(tmp_workspace))
+        assert result["status"] == "success"
+        dataset_id = result["dataset_id"]
+
+        original_base = datasets_module.BASE_DIR
+        datasets_module.BASE_DIR = Path(str(tmp_workspace))
+        try:
+            client = TestClient(app)
+            response = client.put(f"/api/datasets/{dataset_id}/rename", json={"dataset_name": ""})
+        finally:
+            datasets_module.BASE_DIR = original_base
+        assert response.status_code == 400
+
+    def test_classify_missing_fields_uses_defaults(self, tmp_workspace):
+        from fastapi.testclient import TestClient
+        from backend.app.main import app
+        from backend.app.api import datasets as datasets_module
+
+        zip_path = self._create_bhuvan_zip(tmp_workspace)
+        result = ingest_dataset(str(zip_path), str(tmp_workspace))
+        assert result["status"] == "success"
+        dataset_id = result["dataset_id"]
+
+        original_base = datasets_module.BASE_DIR
+        datasets_module.BASE_DIR = Path(str(tmp_workspace))
+        try:
+            client = TestClient(app)
+            response = client.put(f"/api/datasets/{dataset_id}/classify", json={})
+        finally:
+            datasets_module.BASE_DIR = original_base
+        assert response.status_code == 200
+        body = response.json()
+        assert body["status"] == "success"
+
+
+class TestUploadFlow:
+    @pytest.fixture
+    def tmp_workspace(self, tmp_path):
+        base = tmp_path / "workspace"
+        base.mkdir()
+        (base / "data" / "incoming").mkdir(parents=True)
+        (base / "data" / "processing").mkdir(parents=True)
+        (base / "data" / "catalog").mkdir(parents=True)
+        (base / "data" / "raw").mkdir(parents=True)
+        return base
+
+    def _create_bhuvan_zip(self, tmp_workspace, name="upload_test.zip"):
+        zip_path = tmp_workspace / "data" / "incoming" / name
+        with zipfile.ZipFile(zip_path, "w") as zf:
+            zf.writestr("metadata.xml", """<?xml version="1.0"?>
+<metadata tileno="e43g">
+    <Data_Identification_Information>
+        <Name_of_the_Dataset>Upload_Test_V1</Name_of_the_Dataset>
+        <Theme>Terrain</Theme>
+        <Keywords>Cartosat-1,DEM,Stereodata,India,ISRO,NRSC</Keywords>
+        <Data_Type>Elevation</Data_Type>
+    </Data_Identification_Information>
+    <Coverage>
+        <Upper_left>X = 72E, Y = 19N</Upper_left>
+        <Upper_right>X = 73E, Y = 19N</Upper_right>
+        <Lower_right>X = 73E, Y = 18N</Lower_right>
+        <Lower_left>X = 72E, Y = 18N</Lower_left>
+    </Coverage>
+    <Citation><Lineage><Tile_Name>e43g</Tile_Name><Resolution>1 arc sec</Resolution><File_Format>Geotiff</File_Format></Lineage></Citation>
+    <Dataset_Topic_Category><Data_Identification_topic_category>Digital Elevation Model</Data_Identification_topic_category></Dataset_Topic_Category>
+    <For_Image_Data>
+        <Name_of_the_Satellite>Cartosat-1</Name_of_the_Satellite>
+        <Sensor>PAN(2.5m) Stereo Data</Sensor>
+        <File_Format>Geotiff</File_Format>
+        <Bits_per_Pixel>16bit</Bits_per_Pixel>
+        <Spatial_Resolution>1arc sec</Spatial_Resolution>
+    </For_Image_Data>
+</metadata>
+""")
+            data = np.ones((10, 10), dtype=np.float32)
+            transform = from_bounds(72.0, 18.0, 73.0, 19.0, 10, 10)
+            with rasterio.open(
+                str(tmp_workspace / "dem.tif"),
+                "w",
+                driver="GTiff",
+                height=10,
+                width=10,
+                count=1,
+                dtype=data.dtype,
+                crs="EPSG:4326",
+                transform=transform,
+            ) as dst:
+                dst.write(data, 1)
+            with open(str(tmp_workspace / "dem.tif"), "rb") as f:
+                zf.writestr("dem.tif", f.read())
+        return zip_path
+
+    def test_upload_zip_creates_catalog_entry(self, tmp_workspace):
+        from fastapi.testclient import TestClient
+        from backend.app.main import app
+        from backend.app.api import datasets as datasets_module
+
+        zip_path = self._create_bhuvan_zip(tmp_workspace)
+
+        original_base = datasets_module.BASE_DIR
+        datasets_module.BASE_DIR = Path(str(tmp_workspace))
+        try:
+            client = TestClient(app)
+            with open(zip_path, "rb") as f:
+                response = client.post(
+                    "/api/datasets/upload",
+                    files={"file": ("upload_test.zip", f, "application/zip")},
+                )
+        finally:
+            datasets_module.BASE_DIR = original_base
+
+        assert response.status_code == 200
+        body = response.json()
+        assert body["summary"]["processed"] == 1
+        assert body["summary"]["errors"] == 0
+        assert len(body["results"]) == 1
+
+        result = body["results"][0]
+        assert result["status"] == "success"
+        assert result["dataset_type"] == "DEM"
+        assert result["tile"] == "E43G"
+        assert result["version"] == "V1"
+        assert result["dataset_id"] is not None
+        assert result["dataset_name"] == "Upload_Test_V1"
+        assert result["bounds"] is not None
+        assert "files" in result
+        assert "steps" in result
+
+        datasets = datasets_module.list_datasets(str(tmp_workspace))
+        assert len(datasets) == 1
+        assert datasets[0]["dataset_name"] == "Upload_Test_V1"
+        assert datasets[0]["dataset_type"] == "DEM"
+
+    def test_upload_plain_geotiff(self, tmp_workspace):
+        from fastapi.testclient import TestClient
+        from backend.app.main import app
+        from backend.app.api import datasets as datasets_module
+
+        tif_path = tmp_workspace / "data" / "incoming" / "plain.tif"
+        data = np.ones((10, 10), dtype=np.float32)
+        transform = from_bounds(72.0, 18.0, 73.0, 19.0, 10, 10)
+        with rasterio.open(
+            str(tif_path),
+            "w",
+            driver="GTiff",
+            height=10,
+            width=10,
+            count=1,
+            dtype=data.dtype,
+            crs="EPSG:4326",
+            transform=transform,
+        ) as dst:
+            dst.write(data, 1)
+
+        original_base = datasets_module.BASE_DIR
+        datasets_module.BASE_DIR = Path(str(tmp_workspace))
+        try:
+            client = TestClient(app)
+            with open(tif_path, "rb") as f:
+                response = client.post(
+                    "/api/datasets/upload",
+                    files={"file": ("plain.tif", f, "image/tiff")},
+                )
+        finally:
+            datasets_module.BASE_DIR = original_base
+
+        assert response.status_code == 200
+        body = response.json()
+        assert body["summary"]["processed"] == 1
+        result = body["results"][0]
+        assert result["status"] == "needs_review"
+        assert result["dataset_id"] is not None
+
+        datasets = datasets_module.list_datasets(str(tmp_workspace))
+        assert len(datasets) == 1
+        assert datasets[0]["dataset_name"] == "plain.tif"
+
+    def test_upload_invalid_zip_returns_error(self, tmp_workspace):
+        from fastapi.testclient import TestClient
+        from backend.app.main import app
+        from backend.app.api import datasets as datasets_module
+
+        bad_zip = tmp_workspace / "data" / "incoming" / "bad.zip"
+        bad_zip.write_bytes(b"not a zip file")
+
+        original_base = datasets_module.BASE_DIR
+        datasets_module.BASE_DIR = Path(str(tmp_workspace))
+        try:
+            client = TestClient(app)
+            with open(bad_zip, "rb") as f:
+                response = client.post(
+                    "/api/datasets/upload",
+                    files={"file": ("bad.zip", f, "application/zip")},
+                )
+        finally:
+            datasets_module.BASE_DIR = original_base
+
+        assert response.status_code == 200
+        body = response.json()
+        assert body["summary"]["errors"] == 1
+        result = body["results"][0]
+        assert result["status"] == "error"
+        assert result["error_reason"] == "CORRUPTED_ARCHIVE"
+
+        datasets = datasets_module.list_datasets(str(tmp_workspace))
+        assert len(datasets) == 0
+
+    def test_upload_duplicate_returns_already_exists(self, tmp_workspace):
+        from fastapi.testclient import TestClient
+        from backend.app.main import app
+        from backend.app.api import datasets as datasets_module
+
+        zip_path = self._create_bhuvan_zip(tmp_workspace)
+
+        original_base = datasets_module.BASE_DIR
+        datasets_module.BASE_DIR = Path(str(tmp_workspace))
+        try:
+            client = TestClient(app)
+
+            with open(zip_path, "rb") as f:
+                response1 = client.post(
+                    "/api/datasets/upload",
+                    files={"file": ("upload_test.zip", f, "application/zip")},
+                )
+            assert response1.status_code == 200
+            assert response1.json()["summary"]["processed"] == 1
+
+            with open(zip_path, "rb") as f:
+                response2 = client.post(
+                    "/api/datasets/upload",
+                    files={"file": ("upload_test.zip", f, "application/zip")},
+                )
+        finally:
+            datasets_module.BASE_DIR = original_base
+
+        assert response2.status_code == 200
+        body = response2.json()
+        assert body["summary"]["duplicates"] == 1
+        result = body["results"][0]
+        assert result["status"] == "already_exists"
+
+        datasets = datasets_module.list_datasets(str(tmp_workspace))
+        assert len(datasets) == 1
+
+    def test_upload_response_matches_frontend_expectations(self, tmp_workspace):
+        from fastapi.testclient import TestClient
+        from backend.app.main import app
+        from backend.app.api import datasets as datasets_module
+
+        zip_path = self._create_bhuvan_zip(tmp_workspace)
+
+        original_base = datasets_module.BASE_DIR
+        datasets_module.BASE_DIR = Path(str(tmp_workspace))
+        try:
+            client = TestClient(app)
+            with open(zip_path, "rb") as f:
+                response = client.post(
+                    "/api/datasets/upload",
+                    files={"file": ("upload_test.zip", f, "application/zip")},
+                )
+        finally:
+            datasets_module.BASE_DIR = original_base
+
+        assert response.status_code == 200
+        body = response.json()
+        assert "results" in body
+        assert "summary" in body
+        result = body["results"][0]
+
+        assert "status" in result
+        assert "dataset_id" in result
+        assert "dataset_name" in result
+        assert "dataset_type" in result
+        assert "theme" in result
+        assert "tile" in result
+        assert "version" in result
+        assert "bounds" in result
+        assert "location" in result
+        assert "files" in result
+        assert "steps" in result
+        assert "classification" in result
+        assert "metadata_provenance" in result
+
+    def test_batch_upload_multiple_files(self, tmp_workspace):
+        from fastapi.testclient import TestClient
+        from backend.app.main import app
+        from backend.app.api import datasets as datasets_module
+
+        zip1_path = tmp_workspace / "data" / "incoming" / "batch1.zip"
+        with zipfile.ZipFile(zip1_path, "w") as zf:
+            zf.writestr("metadata.xml", """<?xml version="1.0"?>
+<metadata tileno="e43g">
+    <Data_Identification_Information>
+        <Name_of_the_Dataset>Batch_One_V1</Name_of_the_Dataset>
+        <Theme>Terrain</Theme>
+        <Keywords>Cartosat-1,DEM,Stereodata,India,ISRO,NRSC</Keywords>
+        <Data_Type>Elevation</Data_Type>
+    </Data_Identification_Information>
+    <Coverage>
+        <Upper_left>X = 72E, Y = 19N</Upper_left>
+        <Upper_right>X = 73E, Y = 19N</Upper_right>
+        <Lower_right>X = 73E, Y = 18N</Lower_right>
+        <Lower_left>X = 72E, Y = 18N</Lower_left>
+    </Coverage>
+    <Citation><Lineage><Tile_Name>e43g</Tile_Name><Resolution>1 arc sec</Resolution><File_Format>Geotiff</File_Format></Lineage></Citation>
+    <Dataset_Topic_Category><Data_Identification_topic_category>Digital Elevation Model</Data_Identification_topic_category></Dataset_Topic_Category>
+    <For_Image_Data>
+        <Name_of_the_Satellite>Cartosat-1</Name_of_the_Satellite>
+        <Sensor>PAN(2.5m) Stereo Data</Sensor>
+        <File_Format>Geotiff</File_Format>
+        <Bits_per_Pixel>16bit</Bits_per_Pixel>
+        <Spatial_Resolution>1arc sec</Spatial_Resolution>
+    </For_Image_Data>
+</metadata>
+""")
+            data = np.ones((10, 10), dtype=np.float32)
+            transform = from_bounds(72.0, 18.0, 73.0, 19.0, 10, 10)
+            with rasterio.open(
+                str(tmp_workspace / "dem1.tif"),
+                "w",
+                driver="GTiff",
+                height=10,
+                width=10,
+                count=1,
+                dtype=data.dtype,
+                crs="EPSG:4326",
+                transform=transform,
+            ) as dst:
+                dst.write(data, 1)
+            with open(str(tmp_workspace / "dem1.tif"), "rb") as f:
+                zf.writestr("dem.tif", f.read())
+
+        zip2_path = tmp_workspace / "data" / "incoming" / "batch2.zip"
+        with zipfile.ZipFile(zip2_path, "w") as zf:
+            zf.writestr("metadata.xml", """<?xml version="1.0"?>
+<metadata tileno="f43u">
+    <Data_Identification_Information>
+        <Name_of_the_Dataset>Batch_Two_V1</Name_of_the_Dataset>
+        <Theme>Terrain</Theme>
+        <Keywords>Cartosat-1,DEM,Stereodata,India,ISRO,NRSC</Keywords>
+        <Data_Type>Elevation</Data_Type>
+    </Data_Identification_Information>
+    <Coverage>
+        <Upper_left>X = 73E, Y = 20N</Upper_left>
+        <Upper_right>X = 74E, Y = 20N</Upper_right>
+        <Lower_right>X = 74E, Y = 19N</Lower_right>
+        <Lower_left>X = 73E, Y = 19N</Lower_left>
+    </Coverage>
+    <Citation><Lineage><Tile_Name>f43u</Tile_Name><Resolution>1 arc sec</Resolution><File_Format>Geotiff</File_Format></Lineage></Citation>
+    <Dataset_Topic_Category><Data_Identification_topic_category>Digital Elevation Model</Data_Identification_topic_category></Dataset_Topic_Category>
+    <For_Image_Data>
+        <Name_of_the_Satellite>Cartosat-1</Name_of_the_Satellite>
+        <Sensor>PAN(2.5m) Stereo Data</Sensor>
+        <File_Format>Geotiff</File_Format>
+        <Bits_per_Pixel>16bit</Bits_per_Pixel>
+        <Spatial_Resolution>1arc sec</Spatial_Resolution>
+    </For_Image_Data>
+</metadata>
+""")
+            data = np.ones((10, 10), dtype=np.float32)
+            transform = from_bounds(73.0, 19.0, 74.0, 20.0, 10, 10)
+            with rasterio.open(
+                str(tmp_workspace / "dem2.tif"),
+                "w",
+                driver="GTiff",
+                height=10,
+                width=10,
+                count=1,
+                dtype=data.dtype,
+                crs="EPSG:4326",
+                transform=transform,
+            ) as dst:
+                dst.write(data, 1)
+            with open(str(tmp_workspace / "dem2.tif"), "rb") as f:
+                zf.writestr("dem.tif", f.read())
+
+        original_base = datasets_module.BASE_DIR
+        datasets_module.BASE_DIR = Path(str(tmp_workspace))
+        try:
+            client = TestClient(app)
+            with open(zip1_path, "rb") as f1, open(zip2_path, "rb") as f2:
+                response = client.post(
+                    "/api/datasets/upload",
+                    files=[
+                        ("file", ("batch1.zip", f1, "application/zip")),
+                        ("file", ("batch2.zip", f2, "application/zip")),
+                    ],
+                )
+        finally:
+            datasets_module.BASE_DIR = original_base
+
+        assert response.status_code == 200
+        body = response.json()
+        assert body["summary"]["processed"] == 2
+        assert body["summary"]["errors"] == 0
+        assert len(body["results"]) == 2
+
+        datasets = datasets_module.list_datasets(str(tmp_workspace))
+        assert len(datasets) == 2
+
+    def test_batch_upload_mixed_results(self, tmp_workspace):
+        from fastapi.testclient import TestClient
+        from backend.app.main import app
+        from backend.app.api import datasets as datasets_module
+
+        good_zip = self._create_bhuvan_zip(tmp_workspace, "good.zip")
+        bad_zip = tmp_workspace / "data" / "incoming" / "bad.zip"
+        bad_zip.write_bytes(b"not a zip file")
+
+        original_base = datasets_module.BASE_DIR
+        datasets_module.BASE_DIR = Path(str(tmp_workspace))
+        try:
+            client = TestClient(app)
+            with open(good_zip, "rb") as f1, open(bad_zip, "rb") as f2:
+                response = client.post(
+                    "/api/datasets/upload",
+                    files=[
+                        ("file", ("good.zip", f1, "application/zip")),
+                        ("file", ("bad.zip", f2, "application/zip")),
+                    ],
+                )
+        finally:
+            datasets_module.BASE_DIR = original_base
+
+        assert response.status_code == 200
+        body = response.json()
+        assert body["summary"]["processed"] == 1
+        assert body["summary"]["errors"] == 1
+
+        good_result = next(r for r in body["results"] if r["file"] == "good.zip")
+        bad_result = next(r for r in body["results"] if r["file"] == "bad.zip")
+        assert good_result["status"] == "success"
+        assert bad_result["status"] == "error"
+        assert bad_result["error_reason"] == "CORRUPTED_ARCHIVE"
+
+        datasets = datasets_module.list_datasets(str(tmp_workspace))
+        assert len(datasets) == 1
+
+    def test_successful_ingestion_cleans_incoming_file(self, tmp_workspace):
+        from fastapi.testclient import TestClient
+        from backend.app.main import app
+        from backend.app.api import datasets as datasets_module
+        from backend.app.api.datasets import INCOMING_DIR
+
+        zip_path = self._create_bhuvan_zip(tmp_workspace)
+
+        original_base = datasets_module.BASE_DIR
+        datasets_module.BASE_DIR = Path(str(tmp_workspace))
+        try:
+            client = TestClient(app)
+            with open(zip_path, "rb") as f:
+                response = client.post(
+                    "/api/datasets/upload",
+                    files={"file": ("upload_test.zip", f, "application/zip")},
+                )
+            assert response.status_code == 200
+            assert response.json()["summary"]["processed"] == 1
+        finally:
+            datasets_module.BASE_DIR = original_base
+
+        incoming_file = INCOMING_DIR / "upload_test.zip"
+        assert not incoming_file.exists(), f"Incoming file {incoming_file} should be cleaned up after successful ingestion"
+
+    def test_failed_ingestion_cleans_incoming_file(self, tmp_workspace):
+        from fastapi.testclient import TestClient
+        from backend.app.main import app
+        from backend.app.api import datasets as datasets_module
+        from backend.app.api.datasets import INCOMING_DIR
+
+        bad_zip = tmp_workspace / "data" / "incoming" / "bad.zip"
+        bad_zip.write_bytes(b"not a zip file")
+
+        original_base = datasets_module.BASE_DIR
+        datasets_module.BASE_DIR = Path(str(tmp_workspace))
+        try:
+            client = TestClient(app)
+            with open(bad_zip, "rb") as f:
+                response = client.post(
+                    "/api/datasets/upload",
+                    files={"file": ("bad.zip", f, "application/zip")},
+                )
+            assert response.status_code == 200
+            assert response.json()["summary"]["errors"] == 1
+        finally:
+            datasets_module.BASE_DIR = original_base
+
+        incoming_file = INCOMING_DIR / "bad.zip"
+        assert not incoming_file.exists(), f"Incoming file {incoming_file} should be cleaned up after failed ingestion"
+
+    def test_processing_directory_cleaned_after_ingestion(self, tmp_workspace):
+        from fastapi.testclient import TestClient
+        from backend.app.main import app
+        from backend.app.api import datasets as datasets_module
+
+        zip_path = self._create_bhuvan_zip(tmp_workspace)
+
+        original_base = datasets_module.BASE_DIR
+        datasets_module.BASE_DIR = Path(str(tmp_workspace))
+        try:
+            client = TestClient(app)
+            with open(zip_path, "rb") as f:
+                response = client.post(
+                    "/api/datasets/upload",
+                    files={"file": ("upload_test.zip", f, "application/zip")},
+                )
+            assert response.status_code == 200
+            assert response.json()["summary"]["processed"] == 1
+        finally:
+            datasets_module.BASE_DIR = original_base
+
+        processing_dir = tmp_workspace / "data" / "processing"
+        assert processing_dir.exists(), "Processing directory should still exist"
+        entries = list(processing_dir.iterdir())
+        assert len(entries) == 0, f"Processing directory should be empty after ingestion, but contains: {entries}"

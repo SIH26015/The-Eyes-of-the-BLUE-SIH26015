@@ -7,13 +7,17 @@ import numpy as np
 import rasterio
 from rasterio.transform import from_bounds
 
-import sys
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "backend"))
-
 from fastapi.testclient import TestClient
 from backend.app.main import app
 from backend.app.api import datasets as datasets_module
 from backend.app.ingestion.pipeline import ingest_dataset
+from backend.app.ingestion.catalog import soft_delete_dataset
+from backend.app.integration.analysis_data_provider import (
+    get_analysis_dataset,
+    DATASET_DIRECTORY_MISSING,
+    DATASET_DELETED,
+    DATASET_QUARANTINED,
+)
 
 
 @pytest.fixture
@@ -328,3 +332,118 @@ class TestSpatialDiscovery:
             assert "ready" in body
         finally:
             datasets_module.BASE_DIR = original_base
+
+
+class TestAnalysisIntegration:
+    @pytest.fixture
+    def tmp_workspace(self, tmp_path):
+        base = tmp_path / "workspace"
+        base.mkdir()
+        (base / "data" / "incoming").mkdir(parents=True)
+        (base / "data" / "processing").mkdir(parents=True)
+        (base / "data" / "catalog").mkdir(parents=True)
+        (base / "data" / "raw").mkdir(parents=True)
+        return base
+
+    def test_analysis_dataset_returns_existing_files(self, tmp_workspace):
+        from backend.app.integration.analysis_data_provider import get_analysis_dataset
+
+        zip_path = _create_bhuvan_zip(tmp_workspace, "analysis_ok.zip")
+        result = ingest_dataset(str(zip_path), str(tmp_workspace))
+        assert result["status"] == "success"
+        dataset_id = result["dataset_id"]
+
+        analysis_ds = get_analysis_dataset(str(tmp_workspace), dataset_id)
+        assert analysis_ds["dataset_id"] == dataset_id
+        assert analysis_ds["ready_for_analysis"] is True
+        assert analysis_ds["directory_exists"] is True
+        assert len(analysis_ds["files"]) > 0
+        for f in analysis_ds["files"]:
+            assert f["exists"] is True
+            assert f["full_path"] is not None
+            assert f["name"] is not None
+
+    def test_analysis_dataset_missing_directory(self, tmp_workspace):
+        from backend.app.integration.analysis_data_provider import get_analysis_dataset
+
+        zip_path = _create_bhuvan_zip(tmp_workspace, "analysis_missing_dir.zip")
+        result = ingest_dataset(str(zip_path), str(tmp_workspace))
+        assert result["status"] == "success"
+        dataset_id = result["dataset_id"]
+
+        import shutil
+        dataset_dir = Path(tmp_workspace) / result["location"]
+        shutil.rmtree(dataset_dir)
+
+        analysis_ds = get_analysis_dataset(str(tmp_workspace), dataset_id)
+        assert analysis_ds["ready_for_analysis"] is False
+        assert analysis_ds["directory_exists"] is False
+        assert any(e["code"] == DATASET_DIRECTORY_MISSING for e in analysis_ds["errors"])
+
+    def test_analysis_dataset_deleted(self, tmp_workspace):
+        from backend.app.integration.analysis_data_provider import get_analysis_dataset
+
+        zip_path = _create_bhuvan_zip(tmp_workspace, "analysis_deleted.zip")
+        result = ingest_dataset(str(zip_path), str(tmp_workspace))
+        assert result["status"] == "success"
+        dataset_id = result["dataset_id"]
+
+        soft_delete_dataset(str(tmp_workspace), dataset_id)
+
+        analysis_ds = get_analysis_dataset(str(tmp_workspace), dataset_id)
+        assert analysis_ds["ready_for_analysis"] is False
+        assert any(e["code"] == DATASET_DELETED for e in analysis_ds["errors"])
+
+    def test_analysis_dataset_quarantined(self, tmp_workspace):
+        from backend.app.integration.analysis_data_provider import get_analysis_dataset
+        from backend.app.ingestion.catalog import update_dataset
+
+        zip_path = _create_bhuvan_zip(tmp_workspace, "analysis_quarantined.zip")
+        result = ingest_dataset(str(zip_path), str(tmp_workspace))
+        assert result["status"] == "success"
+        dataset_id = result["dataset_id"]
+
+        update_dataset(str(tmp_workspace), dataset_id, {"status": "QUARANTINED"})
+
+        analysis_ds = get_analysis_dataset(str(tmp_workspace), dataset_id)
+        assert analysis_ds["ready_for_analysis"] is False
+        assert any(e["code"] == DATASET_QUARANTINED for e in analysis_ds["errors"])
+
+    def test_prepare_analysis_returns_stable_contract(self, tmp_workspace):
+        from fastapi.testclient import TestClient
+        from backend.app.main import app
+
+        zip_path = _create_bhuvan_zip(tmp_workspace, "contract.zip")
+        result = ingest_dataset(str(zip_path), str(tmp_workspace))
+        assert result["status"] == "success"
+
+        original_base = datasets_module.BASE_DIR
+        datasets_module.BASE_DIR = Path(str(tmp_workspace))
+        try:
+            client = TestClient(app)
+            response = client.post("/api/datasets/prepare-analysis", json={
+                "area": {"west": 72.0, "south": 18.0, "east": 73.0, "north": 19.0},
+                "analysis": "terrain",
+            })
+        finally:
+            datasets_module.BASE_DIR = original_base
+
+        assert response.status_code == 200
+        body = response.json()
+        assert "status" in body
+        assert "analysis" in body
+        assert "datasets" in body
+        if body["status"] == "ready":
+            ds = body["datasets"][0]
+            assert "dataset_id" in ds
+            assert "dataset_name" in ds
+            assert "file_path" in ds
+            assert "directory_exists" in ds
+            assert "manifest_exists" in ds
+            assert "manifest_valid" in ds
+            assert "files" in ds
+            assert "manifest" in ds
+            assert "bounds" in ds
+            assert "ready_for_analysis" in ds
+            assert "errors" in ds
+            assert "warnings" in ds

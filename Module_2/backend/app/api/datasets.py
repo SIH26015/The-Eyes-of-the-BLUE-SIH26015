@@ -28,6 +28,23 @@ INCOMING_DIR.mkdir(parents=True, exist_ok=True)
 PROCESSING_DIR.mkdir(parents=True, exist_ok=True)
 
 
+def _cleanup_ingestion_temp_files(source_path: str, base_dir: str) -> None:
+    source_file = Path(source_path)
+    try:
+        if source_file.exists():
+            source_file.unlink()
+    except Exception:
+        pass
+
+    try:
+        processing_dir = Path(base_dir) / "data" / "processing"
+        package_dir = processing_dir / source_file.stem
+        if package_dir.exists():
+            shutil.rmtree(package_dir)
+    except Exception:
+        pass
+
+
 def _build_dataset_detail(base_dir: str, ds: Dict[str, Any]) -> Dict[str, Any]:
     dataset_dir = Path(base_dir) / ds.get("file_path", "")
     manifest = {}
@@ -166,6 +183,7 @@ async def upload_datasets(file: list[UploadFile] = File(...)):
     for path in saved_paths:
         result = ingest_dataset(path, str(BASE_DIR))
         results.append(result)
+        _cleanup_ingestion_temp_files(path, str(BASE_DIR))
 
     processed = [r for r in results if r.get("status") != "error"]
     errors = [r for r in results if r.get("status") == "error"]

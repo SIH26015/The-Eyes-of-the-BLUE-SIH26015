@@ -1,0 +1,81 @@
+{
+  "dataset_id": 27,
+  "dataset_name": "C1_DEM_16b_2006-2008_v1_73E20N_f43t",
+  "dataset_type": "DEM",
+  "theme": "terrain",
+  "tile": "F43T",
+  "version": "V1",
+  "status": "READY",
+  "source": "Cartosat-1 PAN(2.5m) Stereo Data",
+  "platform": "Cartosat-1",
+  "sensor": "PAN(2.5m) Stereo Data",
+  "bits_per_pixel": "16bit",
+  "files": [
+    {
+      "name": "cdnf43t.tif",
+      "type": "GeoTIFF",
+      "role": "primary"
+    },
+    {
+      "name": "cdnf43t.xml",
+      "type": "XML",
+      "role": "metadata"
+    },
+    {
+      "name": "policy.txt",
+      "type": "TXT",
+      "role": "documentation"
+    },
+    {
+      "name": "readme.txt",
+      "type": "TXT",
+      "role": "documentation"
+    }
+  ],
+  "spatial_metadata": {
+    "bounds": {
+      "west": 73.0,
+      "south": 20.0,
+      "east": 74.0,
+      "north": 21.0,
+      "source": "xml",
+      "confidence": "high",
+      "crs": null
+    },
+    "resolution": "1arc sec",
+    "format": "Geotiff",
+    "crs": "EPSG:4326",
+    "consistency": "consistent"
+  },
+  "ingested_at": null,
+  "original_filename": "C1_DEM_16B_2006-2008_v1_73E20N_f43t.zip",
+  "classification": null,
+  "metadata_provenance": {
+    "tile": {
+      "value": "F43T",
+      "source": "xml",
+      "confidence": "high"
+    },
+    "version": {
+      "value": "V1",
+      "source": "xml",
+      "confidence": "high"
+    },
+    "dataset_type": {
+      "value": "DEM",
+      "source": "xml",
+      "confidence": "high"
+    },
+    "theme": {
+      "value": "terrain",
+      "source": "xml",
+      "confidence": "high"
+    },
+    "dataset_name": {
+      "value": "C1_DEM_16b_2006-2008_v1_73E20N_f43t",
+      "source": "xml",
+      "confidence": "high"
+    }
+  },
+  "quality": null
+}

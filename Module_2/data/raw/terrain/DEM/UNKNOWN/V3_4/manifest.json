@@ -1,0 +1,105 @@
+{
+  "dataset_id": 22,
+  "dataset_name": "C1_DEM_16B_2005-2014_v3_R-1_74E19N_e43c.zip",
+  "dataset_type": "DEM",
+  "theme": "terrain",
+  "tile": "UNKNOWN",
+  "version": "V3",
+  "status": "NEEDS_REVIEW",
+  "source": null,
+  "platform": null,
+  "sensor": null,
+  "bits_per_pixel": null,
+  "files": [
+    {
+      "name": "cdne43c.dbf",
+      "type": "DBF",
+      "role": "supporting"
+    },
+    {
+      "name": "cdne43c.prj",
+      "type": "PRJ",
+      "role": "supporting"
+    },
+    {
+      "name": "cdne43c.shp",
+      "type": "Shapefile",
+      "role": "primary"
+    },
+    {
+      "name": "cdne43c.shp.xml",
+      "type": "XML",
+      "role": "metadata"
+    },
+    {
+      "name": "cdne43c.shx",
+      "type": "SHX",
+      "role": "supporting"
+    },
+    {
+      "name": "cdne43c.tif",
+      "type": "GeoTIFF",
+      "role": "primary"
+    },
+    {
+      "name": "cdne43c.xml",
+      "type": "XML",
+      "role": "metadata"
+    },
+    {
+      "name": "policy.txt",
+      "type": "TXT",
+      "role": "documentation"
+    },
+    {
+      "name": "readme.txt",
+      "type": "TXT",
+      "role": "documentation"
+    }
+  ],
+  "spatial_metadata": {
+    "bounds": {
+      "west": 73.99986111111112,
+      "south": 19.000138888888888,
+      "east": 74.99986111111112,
+      "north": 20.000138888888888,
+      "source": "geotiff",
+      "confidence": "high",
+      "crs": null
+    },
+    "resolution": null,
+    "format": null,
+    "crs": "EPSG:4326"
+  },
+  "ingested_at": null,
+  "original_filename": "C1_DEM_16B_2005-2014_v3_R-1_74E19N_e43c.zip",
+  "classification": null,
+  "metadata_provenance": {
+    "tile": {
+      "value": "UNKNOWN",
+      "source": "unknown",
+      "confidence": "unknown"
+    },
+    "version": {
+      "value": "V3",
+      "source": "filename",
+      "confidence": "medium"
+    },
+    "dataset_type": {
+      "value": "DEM",
+      "source": "xml",
+      "confidence": "high"
+    },
+    "theme": {
+      "value": "terrain",
+      "source": "inference",
+      "confidence": "medium"
+    },
+    "dataset_name": {
+      "value": "C1_DEM_16B_2005-2014_v3_R-1_74E19N_e43c.zip",
+      "source": "unknown",
+      "confidence": "UNKNOWN"
+    }
+  },
+  "quality": null
+}

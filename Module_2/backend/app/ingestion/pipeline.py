@@ -772,7 +772,7 @@ def ingest_dataset(file_path: str, base_dir: str, parser_version: str = "1.0") -
             dest = quarantine_path / f"{source_file.stem}_{counter}{source_file.suffix}"
             counter += 1
         shutil.move(str(source_file), str(dest))
-        if extract_dir.exists() and extract_dir != processing_dir / source_file.stem:
+        if extract_dir.exists():
             shutil.rmtree(extract_dir)
         steps.append({"step": f"Quarantined: {dataset_validation['reason']}", "status": "error"})
         if run_id:

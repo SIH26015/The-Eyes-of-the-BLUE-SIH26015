@@ -45,3 +45,45 @@ class PrepareAnalysisRequest(BaseModel):
 
 class CapabilitiesRequest(BaseModel):
     area: BoundsModel
+
+
+class AnalysisDatasetFile(BaseModel):
+    name: str
+    path: str
+    type: str
+    role: str
+    exists: bool
+    size: Optional[int] = None
+
+
+class AnalysisDataset(BaseModel):
+    dataset_id: int
+    dataset_name: str
+    dataset_type: str
+    theme: str
+    tile: str
+    version: str
+    status: str
+    file_path: str
+    directory_exists: bool
+    manifest_exists: bool
+    manifest_valid: bool
+    bounds: Optional[Dict[str, Any]] = None
+    resolution: Optional[str] = None
+    format: Optional[str] = None
+    crs: Optional[str] = None
+    platform: Optional[str] = None
+    sensor: Optional[str] = None
+    files: List[AnalysisDatasetFile] = []
+    manifest: Dict[str, Any] = {}
+    metadata: Dict[str, Any] = {}
+    usable: bool = False
+    ready_for_analysis: bool = False
+    errors: List[str] = []
+    warnings: List[str] = []
+
+
+class AnalysisHandoffError(BaseModel):
+    dataset_id: int
+    code: str
+    message: str

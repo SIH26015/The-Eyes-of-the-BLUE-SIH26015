@@ -1,3 +1,8 @@
+// Module 1 — Decision Workspace prototype frontend
+// NOTE: The API endpoints called by this script (/api/parse-xml, /api/blocks/*)
+// are NOT implemented in server.js. This frontend is a prototype awaiting
+// backend integration with Module 2.
+
 // 1. Initialize Map Centered over India
 const map = L.map('map').setView([22.5937, 78.9629], 5);
 

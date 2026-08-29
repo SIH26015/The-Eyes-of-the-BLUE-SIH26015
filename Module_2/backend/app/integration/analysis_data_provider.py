@@ -18,6 +18,17 @@ from backend.app.ingestion.organizer import generate_manifest
 import json
 
 
+DATASET_NOT_FOUND = "DATASET_NOT_FOUND"
+DATASET_DELETED = "DATASET_DELETED"
+DATASET_QUARANTINED = "DATASET_QUARANTINED"
+DATASET_NOT_READY = "DATASET_NOT_READY"
+DATASET_DIRECTORY_MISSING = "DATASET_DIRECTORY_MISSING"
+SOURCE_FILE_MISSING = "SOURCE_FILE_MISSING"
+MANIFEST_MISSING = "MANIFEST_MISSING"
+MANIFEST_INVALID = "MANIFEST_INVALID"
+MANIFEST_FILE_MISSING = "MANIFEST_FILE_MISSING"
+
+
 def _load_manifest(dataset_dir: Path) -> Dict[str, Any]:
     manifest_path = dataset_dir / "manifest.json"
     if manifest_path.exists():
@@ -50,6 +61,224 @@ def _dataset_is_usable(dataset: Dict[str, Any], dataset_dir: Path) -> bool:
         return False
 
     return True
+
+
+def get_analysis_dataset(base_dir: str, dataset_id: int) -> Dict[str, Any]:
+    dataset = get_dataset(base_dir, dataset_id)
+    is_deleted = False
+    if not dataset:
+        conn = None
+        try:
+            from backend.app.ingestion.catalog import get_conn, init_db
+            init_db(base_dir)
+            conn = get_conn(base_dir)
+            row = conn.execute("SELECT * FROM datasets WHERE id = ?", (dataset_id,)).fetchone()
+            if row:
+                dataset = dict(row)
+                is_deleted = dataset.get("deleted_at") is not None
+        except Exception:
+            pass
+        finally:
+            if conn:
+                conn.close()
+
+    if not dataset:
+        return {
+            "dataset_id": dataset_id,
+            "ready_for_analysis": False,
+            "errors": [{"code": DATASET_NOT_FOUND, "message": "Dataset not found or has been permanently deleted"}],
+            "warnings": [],
+            "files": [],
+            "manifest": {},
+            "metadata": {},
+        }
+
+    if is_deleted:
+        return {
+            "dataset_id": dataset_id,
+            "dataset_name": dataset.get("dataset_name"),
+            "dataset_type": dataset.get("dataset_type"),
+            "status": dataset.get("status"),
+            "file_path": dataset.get("file_path"),
+            "ready_for_analysis": False,
+            "errors": [{"code": DATASET_DELETED, "message": "Dataset has been deleted"}],
+            "warnings": [],
+            "files": [],
+            "manifest": {},
+            "metadata": {},
+        }
+
+    if dataset.get("status") == "QUARANTINED":
+        return {
+            "dataset_id": dataset_id,
+            "dataset_name": dataset.get("dataset_name"),
+            "dataset_type": dataset.get("dataset_type"),
+            "status": dataset.get("status"),
+            "file_path": dataset.get("file_path"),
+            "ready_for_analysis": False,
+            "errors": [{"code": DATASET_QUARANTINED, "message": "Dataset is quarantined and not available for analysis"}],
+            "warnings": [],
+            "files": [],
+            "manifest": {},
+            "metadata": {},
+        }
+
+    file_path = dataset.get("file_path", "")
+    dataset_dir = Path(base_dir) / file_path if file_path else None
+    errors = []
+    warnings = []
+
+    if not file_path:
+        errors.append({"code": DATASET_DIRECTORY_MISSING, "message": "Dataset has no file path"})
+        dataset_dir = None
+
+    if dataset_dir and not dataset_dir.exists():
+        errors.append({"code": DATASET_DIRECTORY_MISSING, "message": f"Dataset directory missing: {file_path}"})
+
+    manifest = {}
+    manifest_valid = False
+    manifest_exists = False
+    if dataset_dir:
+        manifest = _load_manifest(dataset_dir)
+        manifest_path = dataset_dir / "manifest.json"
+        manifest_exists = manifest_path.exists()
+        if manifest_exists:
+            if manifest:
+                manifest_valid = True
+            else:
+                errors.append({"code": MANIFEST_INVALID, "message": "Manifest file exists but could not be parsed"})
+
+    if not manifest_exists and dataset_dir:
+        warnings.append({"code": MANIFEST_MISSING, "message": "Manifest.json not found"})
+
+    file_records = get_dataset_files(base_dir, dataset_id)
+    files = []
+    primary_files_missing = False
+
+    for f in file_records:
+        file_name = f.get("file_name", "")
+        relative_path = f.get("relative_path", file_name)
+        full_path = dataset_dir / relative_path if dataset_dir else None
+        file_exists = full_path.exists() if full_path else False
+        file_type = f.get("format") or f.get("extension", "unknown")
+        file_role = f.get("file_role", "unknown")
+
+        files.append({
+            "name": file_name,
+            "path": relative_path,
+            "full_path": str(full_path) if full_path else None,
+            "type": file_type,
+            "role": file_role,
+            "exists": file_exists,
+            "size": f.get("file_size"),
+            "spatial": bool(f.get("spatial", 0)),
+        })
+
+        if not file_exists:
+            if file_role == "primary" or file_type.lower() in {".tif", ".tiff", ".shp", ".geojson"}:
+                primary_files_missing = True
+                errors.append({"code": MANIFEST_FILE_MISSING, "message": f"Primary data file missing: {relative_path}"})
+
+    if primary_files_missing:
+        pass
+    elif not file_records and dataset_dir:
+        any_files = list(dataset_dir.rglob("*")) if dataset_dir.exists() else []
+        for p in any_files:
+            if p.is_file() and p.name != "manifest.json":
+                rel = p.relative_to(dataset_dir)
+                files.append({
+                    "name": p.name,
+                    "path": str(rel),
+                    "full_path": str(p),
+                    "type": p.suffix.lower().lstrip(".") or "unknown",
+                    "role": _infer_role_from_name(p.name),
+                    "exists": True,
+                    "size": p.stat().st_size if p.exists() else None,
+                    "spatial": p.suffix.lower() in {".tif", ".tiff", ".shp", ".geojson", ".json", ".nc"},
+                })
+                break
+
+    usable = len(errors) == 0
+    ready_for_analysis = usable and dataset.get("status") in ("READY", "NEEDS_REVIEW")
+
+    bounds = None
+    if dataset.get("min_lon") is not None and dataset.get("max_lon") is not None:
+        bounds = {
+            "west": dataset.get("min_lon"),
+            "south": dataset.get("min_lat"),
+            "east": dataset.get("max_lon"),
+            "north": dataset.get("max_lat"),
+        }
+    elif manifest.get("spatial_metadata", {}).get("bounds"):
+        b = manifest["spatial_metadata"]["bounds"]
+        if isinstance(b, dict):
+            bounds = {
+                "west": b.get("west") or b.get("min_lon"),
+                "south": b.get("south") or b.get("min_lat"),
+                "east": b.get("east") or b.get("max_lon"),
+                "north": b.get("north") or b.get("max_lat"),
+            }
+
+    crs = dataset.get("crs") or manifest.get("spatial_metadata", {}).get("crs")
+    if not crs and files:
+        for file_info in files:
+            if file_info.get("spatial"):
+                crs = file_info.get("crs") or "EPSG:4326"
+                break
+
+    metadata = {
+        "dataset_name": dataset.get("dataset_name"),
+        "dataset_type": dataset.get("dataset_type"),
+        "theme": dataset.get("theme"),
+        "tile": dataset.get("tile"),
+        "version": dataset.get("version"),
+        "resolution": dataset.get("resolution") or manifest.get("spatial_metadata", {}).get("resolution"),
+        "format": dataset.get("format") or manifest.get("spatial_metadata", {}).get("format"),
+        "source": dataset.get("source"),
+        "platform": dataset.get("platform") or manifest.get("platform"),
+        "sensor": dataset.get("sensor") or manifest.get("sensor"),
+        "bits_per_pixel": dataset.get("bits_per_pixel") or manifest.get("bits_per_pixel"),
+        "ingested_at": dataset.get("ingested_at"),
+        "original_filename": dataset.get("original_filename"),
+    }
+
+    return {
+        "dataset_id": dataset_id,
+        "dataset_name": dataset.get("dataset_name"),
+        "dataset_type": dataset.get("dataset_type"),
+        "theme": dataset.get("theme"),
+        "tile": dataset.get("tile"),
+        "version": dataset.get("version"),
+        "status": dataset.get("status"),
+        "file_path": file_path,
+        "directory_exists": dataset_dir.exists() if dataset_dir else False,
+        "manifest_exists": manifest_exists,
+        "manifest_valid": manifest_valid,
+        "bounds": bounds,
+        "resolution": metadata["resolution"],
+        "format": metadata["format"],
+        "crs": crs,
+        "platform": metadata["platform"],
+        "sensor": metadata["sensor"],
+        "files": files,
+        "manifest": manifest,
+        "metadata": metadata,
+        "usable": usable,
+        "ready_for_analysis": ready_for_analysis,
+        "errors": errors,
+        "warnings": warnings,
+    }
+
+
+def _infer_role_from_name(filename: str) -> str:
+    name_lower = filename.lower()
+    if "meta" in name_lower or name_lower.endswith(".xml"):
+        return "metadata"
+    if name_lower.endswith((".tif", ".tiff", ".shp", ".geojson", ".json", ".csv")):
+        return "primary"
+    if "readme" in name_lower or "license" in name_lower or "policy" in name_lower:
+        return "documentation"
+    return "supporting"
 
 
 def search_datasets_by_area(
@@ -132,6 +361,7 @@ def evaluate_readiness(
             "datasets": [],
             "missing_requirements": [f"Unknown analysis type: {analysis_type}"],
             "warnings": [],
+            "errors": [{"code": "UNKNOWN_ANALYSIS", "message": f"Unknown analysis type: {analysis_type}"}],
         }
 
     search_results = search_datasets_by_area(
@@ -160,22 +390,30 @@ def evaluate_readiness(
 
     datasets = []
     for ds in matched_required.values():
+        analysis_ds = get_analysis_dataset(base_dir, ds["dataset_id"])
         datasets.append({
             "dataset_id": ds["dataset_id"],
             "role": "primary",
             "dataset_type": ds["dataset_type"],
             "coverage_percentage": ds["coverage_percentage"],
             "quality_score": ds.get("quality_score"),
-            "usable": ds["usable"],
+            "usable": analysis_ds["ready_for_analysis"],
+            "ready_for_analysis": analysis_ds["ready_for_analysis"],
+            "errors": analysis_ds.get("errors", []),
+            "warnings": analysis_ds.get("warnings", []),
         })
     for ds in matched_preferred.values():
+        analysis_ds = get_analysis_dataset(base_dir, ds["dataset_id"])
         datasets.append({
             "dataset_id": ds["dataset_id"],
             "role": "preferred",
             "dataset_type": ds["dataset_type"],
             "coverage_percentage": ds["coverage_percentage"],
             "quality_score": ds.get("quality_score"),
-            "usable": ds["usable"],
+            "usable": analysis_ds["ready_for_analysis"],
+            "ready_for_analysis": analysis_ds["ready_for_analysis"],
+            "errors": analysis_ds.get("errors", []),
+            "warnings": analysis_ds.get("warnings", []),
         })
 
     missing_requirements = []
@@ -187,6 +425,7 @@ def evaluate_readiness(
         missing_requirements.append(f"Change detection requires at least {min_datasets} compatible datasets")
 
     ready = len(missing_requirements) == 0 and len(datasets) > 0
+    ready = ready and all(ds.get("ready_for_analysis", False) for ds in datasets)
 
     score = 0
     if ready:
@@ -201,13 +440,20 @@ def evaluate_readiness(
                 score -= 10
         score = max(0, min(100, score))
 
+    all_warnings = []
+    all_errors = []
+    for ds in datasets:
+        all_warnings.extend(ds.get("warnings", []))
+        all_errors.extend(ds.get("errors", []))
+
     return {
         "analysis": analysis_type,
         "ready": ready,
         "readiness_score": score,
         "datasets": datasets,
         "missing_requirements": missing_requirements,
-        "warnings": [],
+        "warnings": all_warnings,
+        "errors": all_errors,
     }
 
 
@@ -408,7 +654,10 @@ def prepare_analysis_data(
             "status": "error",
             "analysis": analysis,
             "error": f"Unknown analysis type: {analysis}",
+            "error_code": "UNKNOWN_ANALYSIS",
             "datasets": [],
+            "warnings": [],
+            "errors": [{"code": "UNKNOWN_ANALYSIS", "message": f"Unknown analysis type: {analysis}"}],
         }
 
     readiness = evaluate_readiness(base_dir, area, analysis)
@@ -419,7 +668,8 @@ def prepare_analysis_data(
             "readiness_score": readiness["readiness_score"],
             "datasets": readiness["datasets"],
             "missing_requirements": readiness["missing_requirements"],
-            "warnings": readiness["warnings"],
+            "warnings": readiness.get("warnings", []),
+            "errors": readiness.get("errors", []),
         }
 
     search_results = search_datasets_by_area(
@@ -437,6 +687,7 @@ def prepare_analysis_data(
             "datasets": [],
             "missing_requirements": ["No datasets found for the selected area"],
             "warnings": [],
+            "errors": [{"code": "NO_DATASETS_FOUND", "message": "No datasets found for the selected area"}],
         }
 
     ranking = rank_datasets(all_candidates, area, analysis, top_n=5)
@@ -448,36 +699,46 @@ def prepare_analysis_data(
         if not ds:
             continue
 
-        dataset_dir = Path(base_dir) / ds.get("location", "")
-        files = []
-        if dataset_dir.exists():
-            from backend.app.ingestion.catalog import get_dataset_files
-            file_records = get_dataset_files(base_dir, ds["dataset_id"])
-            for f in file_records:
-                files.append({
-                    "file_id": f.get("id"),
-                    "path": f"{ds.get('location')}/{f.get('file_name')}",
-                    "role": f.get("file_role"),
-                    "type": f.get("format"),
-                    "spatial": bool(f.get("spatial")),
-                })
-
+        analysis_ds = get_analysis_dataset(base_dir, ds["dataset_id"])
         datasets_info.append({
-            "dataset_id": ds["dataset_id"],
-            "dataset_type": ds.get("dataset_type"),
+            "dataset_id": analysis_ds["dataset_id"],
+            "dataset_name": analysis_ds["dataset_name"],
+            "dataset_type": analysis_ds["dataset_type"],
             "role": "primary",
-            "location": ds.get("location"),
+            "location": analysis_ds["file_path"],
+            "directory_exists": analysis_ds["directory_exists"],
+            "manifest_exists": analysis_ds["manifest_exists"],
+            "manifest_valid": analysis_ds["manifest_valid"],
             "coverage_percentage": ds.get("coverage_percentage"),
             "quality_score": ds.get("quality_score"),
-            "usable": ds["usable"],
-            "files": files,
+            "usable": analysis_ds["usable"],
+            "ready_for_analysis": analysis_ds["ready_for_analysis"],
+            "bounds": analysis_ds["bounds"],
+            "resolution": analysis_ds["resolution"],
+            "format": analysis_ds["format"],
+            "crs": analysis_ds["crs"],
+            "platform": analysis_ds["platform"],
+            "sensor": analysis_ds["sensor"],
+            "files": analysis_ds["files"],
+            "manifest": analysis_ds["manifest"],
+            "metadata": analysis_ds["metadata"],
+            "errors": analysis_ds.get("errors", []),
+            "warnings": analysis_ds.get("warnings", []),
         })
+
+    all_errors = []
+    all_warnings = []
+    for ds_info in datasets_info:
+        all_errors.extend(ds_info.get("errors", []))
+        all_warnings.extend(ds_info.get("warnings", []))
 
     return {
         "status": "ready",
         "analysis": analysis,
         "area": area,
         "datasets": datasets_info,
+        "ready_for_analysis": all(ds["ready_for_analysis"] for ds in datasets_info) if datasets_info else False,
         "recommendations": [r["reasons"] for r in recommended],
-        "warnings": [w for r in recommended for w in r.get("warnings", [])],
+        "warnings": all_warnings,
+        "errors": all_errors,
     }

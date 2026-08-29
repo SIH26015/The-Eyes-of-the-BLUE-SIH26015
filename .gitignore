@@ -6,10 +6,12 @@ node_modules/
 Module_2/venv/
 venv/
 .venv/
+env/
 
 # Python cache
 __pycache__/
 *.py[cod]
+*$py.class
 
 # Testing
 .pytest_cache/
@@ -21,8 +23,8 @@ htmlcov/
 .env.*
 
 # IDE
-.vscode/
 .idea/
+.vscode/
 
 # OS
 .DS_Store
@@ -35,30 +37,22 @@ Module_1/public/uploads/*
 # Logs
 *.log
 
+# Module 0 runtime
+*.db
+
 # Module 2 runtime/generated data
 Module_2/data/catalog/*.db
 Module_2/data/incoming/*
 Module_2/data/processed/*
 Module_2/data/processing/*
 Module_2/data/quarantine/*
+Module_2/data/analysis/*
 
 # Large geospatial source data
 Module_2/data/raw/**/*.tif
 Module_2/data/raw/**/*.tiff
 Module_2/data/raw/**/*.zip
 Module_2/data/raw/**/*.ZIP
-
-# Module 2 generated/local data
-Module_2/data/catalog/*.db
-Module_2/data/incoming/*
-Module_2/data/processed/*
-Module_2/data/processing/*
-Module_2/data/quarantine/*
-
-# Large geospatial raster files
-*.tif
-*.tiff
-*.zip
 
 # Keep directory placeholders
 !Module_2/data/incoming/.gitkeep

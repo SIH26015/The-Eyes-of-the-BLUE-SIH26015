@@ -1,3 +1,6 @@
+# DEPRECATED: Use generate_map.py instead. This file is a near-duplicate prototype.
+# Kept for reference only.
+
 import xml.etree.ElementTree as ET
 import re
 import folium

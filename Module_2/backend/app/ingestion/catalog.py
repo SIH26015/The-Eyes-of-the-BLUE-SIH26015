@@ -246,6 +246,7 @@ def update_dataset(base_dir: str, dataset_id: int, record: Dict[str, Any]):
 
 
 def get_dataset(base_dir: str, dataset_id: int) -> Optional[Dict[str, Any]]:
+    init_db(base_dir)
     conn = get_conn(base_dir)
     row = conn.execute("SELECT * FROM datasets WHERE id = ? AND deleted_at IS NULL", (dataset_id,)).fetchone()
     conn.close()
@@ -253,6 +254,7 @@ def get_dataset(base_dir: str, dataset_id: int) -> Optional[Dict[str, Any]]:
 
 
 def list_datasets(base_dir: str, limit: int = 100, offset: int = 0, filters: Dict[str, Any] = None) -> List[Dict[str, Any]]:
+    init_db(base_dir)
     conn = get_conn(base_dir)
     query = "SELECT * FROM datasets WHERE deleted_at IS NULL"
     params: list = []

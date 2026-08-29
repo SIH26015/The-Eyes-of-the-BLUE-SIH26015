@@ -2,131 +2,709 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Interactive Spatial Grid Engine</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Watershed Analysis Workspace — V1</title>
+    <meta name="description" content="Watershed analysis workspace connecting Module 1 UI to Module 2 spatial data engine.">
+    <!-- NOTE: This frontend prototype calls /api/parse-xml and /api/blocks/* which are not implemented in server.js. Backend integration pending. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
-        body { display: flex; height: 100vh; }
-        #map { flex: 1; height: 100%; }
-        #sidebar { width: 360px; background: #f4f6f8; border-left: 2px solid #ccc; padding: 20px; overflow-y: auto; }
-        .card { background: #fff; padding: 15px; border-radius: 6px; border: 1px solid #ddd; margin-top: 12px; }
-        .btn { width: 100%; padding: 10px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 10px; font-weight: bold; }
-        .btn:hover { background: #0056b3; }
-        input, select { width: 100%; padding: 8px; margin: 6px 0 12px 0; border: 1px solid #ccc; border-radius: 4px; }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            display: flex; flex-direction: column; height: 100vh;
+            background: #0f172a; color: #e2e8f0; overflow: hidden;
+        }
+
+        /* ── Navbar ── */
+        .navbar {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            height: 56px; padding: 0 24px;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid #334155; z-index: 1000;
+        }
+        .brand { display: flex; align-items: center; gap: 12px; }
+        .brand-icon {
+            width: 32px; height: 32px; border-radius: 8px;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px; color: white;
+        }
+        .brand h1 { font-size: 15px; font-weight: 700; color: #f1f5f9; letter-spacing: 0.3px; }
+        .badge-env {
+            background: #3b82f615; color: #60a5fa; border: 1px solid #3b82f630;
+            padding: 3px 10px; border-radius: 6px; font-size: 10px; font-weight: 600;
+            letter-spacing: 0.5px; text-transform: uppercase;
+        }
+        .nav-meta { display: flex; align-items: center; gap: 14px; }
+        .coords-box {
+            font-family: 'JetBrains Mono', monospace; font-size: 11px;
+            background: #0f172a; padding: 5px 12px; border-radius: 6px;
+            border: 1px solid #334155; color: #64748b; min-width: 200px; text-align: center;
+        }
+        .status-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: #22c55e; box-shadow: 0 0 6px #22c55e80;
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+        @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+        /* ── Workspace ── */
+        .workspace { display: flex; flex: 1; height: calc(100vh - 56px); }
+        #map { flex: 1; z-index: 1; background: #080c14; }
+
+        /* ── Sidebar ── */
+        #sidebar {
+            width: 420px; background: #1e293b; border-left: 1px solid #334155;
+            padding: 0; overflow-y: auto; display: flex; flex-direction: column; z-index: 2;
+        }
+        .sidebar-section { padding: 20px; border-bottom: 1px solid #334155; }
+        .sidebar-section:last-child { border-bottom: none; }
+        .section-title {
+            font-size: 11px; font-weight: 700; color: #64748b;
+            text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px;
+        }
+
+        /* ── Dataset Selector ── */
+        .dataset-select {
+            width: 100%; padding: 10px 14px; background: #0f172a;
+            border: 1px solid #334155; border-radius: 8px; color: #e2e8f0;
+            font-size: 13px; font-family: inherit; cursor: pointer;
+            appearance: none; -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 12px center;
+        }
+        .dataset-select:focus { border-color: #3b82f6; outline: none; box-shadow: 0 0 0 3px #3b82f620; }
+
+        /* ── Button ── */
+        .btn-analyze {
+            width: 100%; padding: 12px; border: none; border-radius: 8px;
+            font-weight: 600; font-size: 13px; cursor: pointer;
+            margin-top: 16px; transition: all 0.2s ease;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-analyze.primary {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white; box-shadow: 0 2px 8px #3b82f630;
+        }
+        .btn-analyze.primary:hover { background: linear-gradient(135deg, #2563eb, #1d4ed8); transform: translateY(-1px); }
+        .btn-analyze:disabled {
+            background: #334155; color: #64748b; cursor: not-allowed;
+            box-shadow: none; transform: none;
+        }
+        .btn-analyze .spinner {
+            width: 14px; height: 14px; border: 2px solid #ffffff40;
+            border-top-color: white; border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── Stats Cards ── */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .stat-card {
+            background: #0f172a; border: 1px solid #334155; border-radius: 10px;
+            padding: 14px; transition: border-color 0.2s, transform 0.2s;
+        }
+        .stat-card:hover { border-color: #475569; transform: translateY(-1px); }
+        .stat-card.full-width { grid-column: 1 / -1; }
+        .stat-label {
+            font-size: 10px; font-weight: 700; color: #64748b;
+            text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px;
+        }
+        .stat-value { font-size: 22px; font-weight: 700; color: #f1f5f9; line-height: 1; }
+        .stat-unit { font-size: 11px; font-weight: 500; color: #94a3b8; margin-left: 3px; }
+        .stat-sub { font-size: 11px; color: #64748b; margin-top: 6px; }
+
+        .stat-bar-container {
+            width: 100%; height: 6px; background: #334155;
+            border-radius: 3px; margin-top: 10px; overflow: hidden;
+        }
+        .stat-bar {
+            height: 100%; border-radius: 3px;
+            transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* ── Bounds Info ── */
+        .bounds-info {
+            background: #0f172a; border: 1px solid #334155; border-radius: 10px;
+            padding: 14px; font-family: 'JetBrains Mono', monospace; font-size: 11px;
+        }
+        .bounds-row { display: flex; justify-content: space-between; padding: 4px 0; }
+        .bounds-label { color: #64748b; }
+        .bounds-value { color: #e2e8f0; font-weight: 500; }
+
+        /* ── Dataset Info ── */
+        .dataset-info {
+            background: #0f172a; border: 1px solid #334155; border-radius: 10px;
+            padding: 14px;
+        }
+        .dataset-info-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 6px 0; border-bottom: 1px solid #1e293b;
+        }
+        .dataset-info-row:last-child { border-bottom: none; }
+        .info-label { font-size: 11px; color: #64748b; font-weight: 500; }
+        .info-value { font-size: 12px; color: #e2e8f0; font-weight: 600; text-align: right; max-width: 55%; word-break: break-word; }
+
+        /* ── Empty State ── */
+        .empty-state {
+            text-align: center; padding: 40px 20px;
+            color: #475569; font-size: 13px;
+        }
+        .empty-state .icon { font-size: 40px; margin-bottom: 12px; opacity: 0.5; }
+
+        /* ── Slope Color Legend ── */
+        .slope-legend {
+            display: flex; align-items: center; gap: 8px; margin-top: 8px;
+        }
+        .legend-gradient {
+            flex: 1; height: 8px; border-radius: 4px;
+            background: linear-gradient(90deg, #22c55e, #eab308, #f97316, #ef4444);
+        }
+        .legend-labels { display: flex; justify-content: space-between; font-size: 10px; color: #64748b; margin-top: 4px; }
+
+        /* ── Fade-in animation ── */
+        .fade-in { animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Scrollbar */
+        #sidebar::-webkit-scrollbar { width: 6px; }
+        #sidebar::-webkit-scrollbar-track { background: transparent; }
+        #sidebar::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
     </style>
 </head>
 <body>
 
-    <div id="map"></div>
+    <!-- ── Navigation Bar ── -->
+    <nav class="navbar">
+        <div class="brand">
+            <div class="brand-icon">🏔️</div>
+            <h1>Watershed Terrain Analysis</h1>
+            <span class="badge-env">V1 — Integration</span>
+        </div>
+        <div class="nav-meta">
+            <div id="coords-display" class="coords-box">Lat: — | Lng: —</div>
+            <div class="status-dot" title="Module 2 Backend Connected"></div>
+        </div>
+    </nav>
 
-    <div id="sidebar">
-        <h2>Block Data Manager</h2>
-        <p style="color: #666; font-size: 13px;">Click any block on the map to view, add, or edit attached datasets.</p>
+    <!-- ── Main Workspace ── -->
+    <div class="workspace">
+        <div id="map"></div>
 
-        <div id="block-editor">
-            <div class="card"><i>No block selected.</i></div>
+        <div id="sidebar">
+            <!-- Section 1: Dataset Selector -->
+            <div class="sidebar-section">
+                <div class="section-title">Select Dataset</div>
+                <select id="dataset-selector" class="dataset-select">
+                    <option value="" disabled selected>Loading datasets…</option>
+                </select>
+                <div style="display: flex; gap: 8px; margin-top: 12px;">
+                    <button id="btn-terrain" class="btn-analyze primary" style="flex: 1;" disabled>Terrain</button>
+                    <button id="btn-ndvi" class="btn-analyze" style="flex: 1; background: #334155; color: #e2e8f0;" disabled>NDVI</button>
+                </div>
+            </div>
+
+            <!-- Section 2: Results (initially empty) -->
+            <div id="results-container">
+                <div class="sidebar-section">
+                    <div class="empty-state">
+                        <div class="icon">📊</div>
+                        <p>Select a DEM dataset and run terrain analysis to see results here.</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        const map = L.map('map').setView([18.5, 73.5], 7);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
+        // ─────────────────────────────────────────────
+        // Configuration
+        // ─────────────────────────────────────────────
+        const M2_API = 'http://localhost:8000';
 
-        // Store data attached to each block (Indexed by tile bounds key)
-        const blockDatabase = {
-            "72E_18N": {
-                tileNo: "cdne43g",
-                datasetName: "C1_DEM_16b_2006-2008_v1_72E18N_e43g",
-                theme: "Terrain (DEM)",
-                satellite: "Cartosat-1",
-                resolution: "1 arc sec",
-                status: "Data Available"
-            }
-        };
+        // ─────────────────────────────────────────────
+        // Map Setup
+        // ─────────────────────────────────────────────
+        const map = L.map('map', { zoomControl: true }).setView([20.0, 74.0], 8);
 
-        let selectedLayer = null;
+        const cartoDark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            maxZoom: 18, attribution: '&copy; CARTO'
+        }).addTo(map);
 
-        // Draw 1-degree grid squares over Western India region (16N-20N, 72E-76E)
-        for (let lat = 16; lat < 20; lat++) {
-            for (let lng = 72; lng < 76; lng++) {
-                const blockKey = `${lng}E_${lat}N`;
-                const bounds = [[lat, lng], [lat + 1, lng + 1]];
-                const hasData = blockDatabase[blockKey];
+        const esriSat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            maxZoom: 18, attribution: '&copy; Esri'
+        });
 
-                const rect = L.rectangle(bounds, {
-                    color: hasData ? "#28a745" : "#007bff",
-                    weight: 1.5,
-                    fillOpacity: hasData ? 0.35 : 0.1
-                }).addTo(map);
+        L.control.layers({ 'Dark Canvas': cartoDark, 'Satellite': esriSat }, null, { position: 'topright' }).addTo(map);
 
-                rect.blockKey = blockKey;
-                rect.bounds = bounds;
+        // Coordinate tracker
+        map.on('mousemove', (e) => {
+            document.getElementById('coords-display').textContent =
+                `Lat: ${e.latlng.lat.toFixed(4)} | Lng: ${e.latlng.lng.toFixed(4)}`;
+        });
 
-                // Handle click event on each grid block
-                rect.on('click', function (e) {
-                    if (selectedLayer) {
-                        selectedLayer.setStyle({ weight: 1.5 });
-                    }
-                    selectedLayer = rect;
-                    rect.setStyle({ weight: 3.5 });
+        // ─────────────────────────────────────────────
+        // State
+        // ─────────────────────────────────────────────
+        let datasets = [];
+        let analysisLayer = null;
+        let currentAnalysisType = null;
 
-                    openBlockEditor(blockKey, bounds);
+        // ─────────────────────────────────────────────
+        // Fetch datasets from Module 2
+        // ─────────────────────────────────────────────
+        async function loadDatasets() {
+            const selector = document.getElementById('dataset-selector');
+            const btnTerrain = document.getElementById('btn-terrain');
+            const btnNdvi = document.getElementById('btn-ndvi');
+
+            try {
+                const res = await fetch(`${M2_API}/api/datasets/?status=READY`);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                datasets = await res.json();
+
+                if (datasets.length === 0) {
+                    selector.innerHTML = '<option value="" disabled selected>No datasets found</option>';
+                    return;
+                }
+
+                selector.innerHTML = '<option value="" disabled selected>Choose a dataset…</option>';
+                datasets.forEach(ds => {
+                    const opt = document.createElement('option');
+                    opt.value = ds.id;
+                    opt.datasetType = ds.dataset_type || 'UNKNOWN';
+                    const bounds = (ds.min_lon != null && ds.max_lat != null)
+                        ? ` (${ds.min_lon}°E–${ds.max_lon}°E, ${ds.min_lat}°N–${ds.max_lat}°N)`
+                        : '';
+                    opt.textContent = `${ds.dataset_name} [${ds.dataset_type || 'UNKNOWN'}]${bounds}`;
+                    selector.appendChild(opt);
                 });
+
+                btnTerrain.disabled = false;
+                btnNdvi.disabled = false;
+
+                // Draw faint outlines of all datasets on the map
+                datasets.forEach(ds => {
+                    if (ds.min_lon != null && ds.min_lat != null) {
+                        L.rectangle(
+                            [[ds.min_lat, ds.min_lon], [ds.max_lat, ds.max_lon]],
+                            { color: '#475569', weight: 0.8, fillOpacity: 0.03, interactive: false }
+                        ).addTo(map);
+                    }
+                });
+
+            } catch (err) {
+                selector.innerHTML = `<option value="" disabled selected>⚠ Failed to connect to Module 2</option>`;
+                console.error('Failed to load datasets:', err);
             }
         }
 
-        function openBlockEditor(key, bounds) {
-            const data = blockDatabase[key] || {
-                tileNo: key,
-                datasetName: "Empty Tile",
-                theme: "None",
-                satellite: "N/A",
-                resolution: "N/A",
-                status: "No Data"
-            };
+        // ─────────────────────────────────────────────
+        // Run Analysis
+        // ─────────────────────────────────────────────
+        async function runAnalysis(analysisType) {
+            const selector = document.getElementById('dataset-selector');
+            const btnTerrain = document.getElementById('btn-terrain');
+            const btnNdvi = document.getElementById('btn-ndvi');
+            const resultsContainer = document.getElementById('results-container');
 
-            document.getElementById('block-editor').innerHTML = `
-                <div class="card">
-                    <h3>Block: ${key}</h3>
-                    <p style="font-size: 12px; color: #555;">Bounds: ${bounds[0][1]}°E-${bounds[1][1]}°E, ${bounds[0][0]}°N-${bounds[1][0]}°N</p>
-                    <hr style="margin: 10px 0;">
+            const datasetId = parseInt(selector.value);
+            if (!datasetId) return;
 
-                    <label><strong>Tile ID / Ref:</strong></label>
-                    <input type="text" id="edit-tileNo" value="${data.tileNo}">
+            currentAnalysisType = analysisType;
 
-                    <label><strong>Dataset Name:</strong></label>
-                    <input type="text" id="edit-dataset" value="${data.datasetName}">
+            // Set loading state
+            btnTerrain.disabled = true;
+            btnNdvi.disabled = true;
+            const activeBtn = analysisType === 'terrain' ? btnTerrain : btnNdvi;
+            activeBtn.innerHTML = '<div class="spinner"></div> Analyzing…';
 
-                    <label><strong>Theme / Type:</strong></label>
-                    <select id="edit-theme">
-                        <option value="Terrain (DEM)" ${data.theme.includes('DEM') ? 'selected' : ''}>Terrain (DEM)</option>
-                        <option value="Satellite Imagery" ${data.theme.includes('Satellite') ? 'selected' : ''}>Satellite Imagery</option>
-                        <option value="Field Photo" ${data.theme.includes('Photo') ? 'selected' : ''}>Field Photo</option>
-                        <option value="None" ${data.theme === 'None' ? 'selected' : ''}>None</option>
-                    </select>
+            try {
+                const res = await fetch(`${M2_API}/api/analysis/${analysisType}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ dataset_id: datasetId, analysis: analysisType }),
+                });
 
-                    <label><strong>Satellite / Source:</strong></label>
-                    <input type="text" id="edit-satellite" value="${data.satellite}">
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const result = await res.json();
 
-                    <button class="btn" onclick="saveBlockData('${key}')">Save / Attach Data to Block</button>
+                if (result.status !== 'completed') {
+                    throw new Error(result.errors?.join(', ') || 'Analysis failed');
+                }
+
+                // ── Draw bounds on map ──
+                const bounds = result.source?.bounds || result.spatial?.bounds;
+                if (bounds) {
+                    if (analysisLayer) map.removeLayer(analysisLayer);
+
+                    let fillColor = '#3b82f6';
+                    let tooltipContent = `<strong>${result.dataset_name}</strong>`;
+
+                    if (analysisType === 'terrain') {
+                        const meanSlope = result.statistics?.slope?.mean || 0;
+                        fillColor = getSlopeColor(meanSlope);
+                        tooltipContent += `<br>Mean Slope: ${meanSlope.toFixed(1)}°`;
+                    } else if (analysisType === 'ndvi') {
+                        const meanNdvi = result.statistics?.ndvi?.mean || 0;
+                        fillColor = getNdviColor(meanNdvi);
+                        tooltipContent += `<br>Mean NDVI: ${meanNdvi.toFixed(3)}`;
+                    }
+
+                    analysisLayer = L.rectangle(
+                        [[bounds.south, bounds.west], [bounds.north, bounds.east]],
+                        {
+                            color: fillColor,
+                            weight: 3,
+                            fillColor: fillColor,
+                            fillOpacity: 0.35,
+                            dashArray: null,
+                        }
+                    ).addTo(map);
+
+                    analysisLayer.bindTooltip(
+                        tooltipContent,
+                        { sticky: true, className: 'leaflet-tooltip' }
+                    );
+
+                    map.fitBounds(
+                        [[bounds.south, bounds.west], [bounds.north, bounds.east]],
+                        { padding: [50, 50], maxZoom: 11 }
+                    );
+                }
+
+                // ── Render statistics in sidebar ──
+                renderResults(result, analysisType);
+
+            } catch (err) {
+                resultsContainer.innerHTML = `
+                    <div class="sidebar-section fade-in">
+                        <div class="stat-card full-width" style="border-color: #ef4444;">
+                            <div class="stat-label" style="color: #ef4444;">Analysis Error</div>
+                            <div style="font-size: 12px; color: #f87171; margin-top: 6px;">${err.message}</div>
+                        </div>
+                    </div>
+                `;
+            } finally {
+                btnTerrain.disabled = false;
+                btnNdvi.disabled = false;
+                btnTerrain.innerHTML = 'Terrain';
+                btnNdvi.innerHTML = 'NDVI';
+            }
+        }
+
+        // ─────────────────────────────────────────────
+        // Slope → Color mapping
+        // ─────────────────────────────────────────────
+        function getSlopeColor(meanSlope) {
+            if (meanSlope < 5)  return '#22c55e';
+            if (meanSlope < 15) return '#eab308';
+            if (meanSlope < 30) return '#f97316';
+            return '#ef4444';
+        }
+
+        function getSlopeLabel(meanSlope) {
+            if (meanSlope < 5)  return 'Flat Terrain';
+            if (meanSlope < 15) return 'Moderate Slope';
+            if (meanSlope < 30) return 'Steep Terrain';
+            return 'Very Steep';
+        }
+
+        // ─────────────────────────────────────────────
+        // NDVI → Color mapping
+        // ─────────────────────────────────────────────
+        function getNdviColor(meanNdvi) {
+            if (meanNdvi < 0)    return '#3b82f6';
+            if (meanNdvi < 0.2)  return '#a3a3a3';
+            if (meanNdvi < 0.4)  return '#84cc16';
+            if (meanNdvi < 0.6)  return '#22c55e';
+            return '#15803d';
+        }
+
+        function getNdviLabel(meanNdvi) {
+            if (meanNdvi < 0)    return 'Water / Bare';
+            if (meanNdvi < 0.2)  return 'Sparse Vegetation';
+            if (meanNdvi < 0.4)  return 'Low Vegetation';
+            if (meanNdvi < 0.6)  return 'Moderate Vegetation';
+            return 'Dense Vegetation';
+        }
+
+        // ─────────────────────────────────────────────
+        // Render results
+        // ─────────────────────────────────────────────
+        function renderResults(result, analysisType) {
+            const container = document.getElementById('results-container');
+            const stats = result.statistics || {};
+            const bounds = result.source?.bounds || result.spatial?.bounds || {};
+
+            if (analysisType === 'ndvi') {
+                renderNdviResults(result, stats, bounds, container);
+            } else {
+                renderTerrainResults(result, stats, bounds, container);
+            }
+        }
+
+        function renderTerrainResults(result, stats, bounds, container) {
+            const elev = stats.elevation || {};
+            const slope = stats.slope || {};
+            const aspect = stats.aspect || {};
+            const meanSlope = slope.mean || 0;
+            const slopeColor = getSlopeColor(meanSlope);
+            const slopeLabel = getSlopeLabel(meanSlope);
+            const slopePct = Math.min(100, (meanSlope / 60) * 100);
+
+            container.innerHTML = `
+                <!-- Dataset Info -->
+                <div class="sidebar-section fade-in">
+                    <div class="section-title">Dataset</div>
+                    <div class="dataset-info">
+                        <div class="dataset-info-row">
+                            <span class="info-label">Name</span>
+                            <span class="info-value">${result.dataset_name || '—'}</span>
+                        </div>
+                        <div class="dataset-info-row">
+                            <span class="info-label">Type</span>
+                            <span class="info-value">${result.dataset_type || '—'}</span>
+                        </div>
+                        <div class="dataset-info-row">
+                            <span class="info-label">CRS</span>
+                            <span class="info-value">${result.source?.crs || '—'}</span>
+                        </div>
+                        <div class="dataset-info-row">
+                            <span class="info-label">Analysis ID</span>
+                            <span class="info-value" style="font-size:10px; color:#64748b;">${result.analysis_id || '—'}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Terrain Statistics -->
+                <div class="sidebar-section fade-in" style="animation-delay: 0.1s;">
+                    <div class="section-title">Terrain Statistics</div>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-label">Elevation Min</div>
+                            <div class="stat-value">${elev.min != null ? elev.min.toFixed(0) : '—'}<span class="stat-unit">m</span></div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Elevation Max</div>
+                            <div class="stat-value">${elev.max != null ? elev.max.toFixed(0) : '—'}<span class="stat-unit">m</span></div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Elevation Mean</div>
+                            <div class="stat-value">${elev.mean != null ? elev.mean.toFixed(1) : '—'}<span class="stat-unit">m</span></div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Valid Pixels</div>
+                            <div class="stat-value">${elev.valid_pixels != null ? (elev.valid_pixels / 1000000).toFixed(1) : '—'}<span class="stat-unit">M</span></div>
+                        </div>
+
+                        <div class="stat-card full-width" style="border-color: ${slopeColor}40;">
+                            <div class="stat-label">Mean Slope</div>
+                            <div style="display: flex; align-items: baseline; gap: 12px;">
+                                <div class="stat-value" style="color: ${slopeColor};">${meanSlope.toFixed(1)}<span class="stat-unit">°</span></div>
+                                <span style="font-size: 12px; color: ${slopeColor}; font-weight: 600;">${slopeLabel}</span>
+                            </div>
+                            <div class="stat-sub">Range: ${slope.min != null ? slope.min.toFixed(1) : '—'}° — ${slope.max != null ? slope.max.toFixed(1) : '—'}°</div>
+                            <div class="stat-bar-container">
+                                <div class="stat-bar" style="width: ${slopePct}%; background: ${slopeColor};"></div>
+                            </div>
+                        </div>
+
+                        <div class="stat-card full-width">
+                            <div class="stat-label">Mean Aspect (Compass)</div>
+                            <div class="stat-value">${aspect.mean != null ? aspect.mean.toFixed(1) : '—'}<span class="stat-unit">°</span></div>
+                            <div class="stat-sub">${aspect.mean != null ? getCompassDirection(aspect.mean) : '—'}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Spatial Bounds -->
+                <div class="sidebar-section fade-in" style="animation-delay: 0.2s;">
+                    <div class="section-title">Spatial Bounds</div>
+                    <div class="bounds-info">
+                        <div class="bounds-row">
+                            <span class="bounds-label">West</span>
+                            <span class="bounds-value">${bounds.west != null ? bounds.west.toFixed(6) : '—'}°E</span>
+                        </div>
+                        <div class="bounds-row">
+                            <span class="bounds-label">East</span>
+                            <span class="bounds-value">${bounds.east != null ? bounds.east.toFixed(6) : '—'}°E</span>
+                        </div>
+                        <div class="bounds-row">
+                            <span class="bounds-label">South</span>
+                            <span class="bounds-value">${bounds.south != null ? bounds.south.toFixed(6) : '—'}°N</span>
+                        </div>
+                        <div class="bounds-row">
+                            <span class="bounds-label">North</span>
+                            <span class="bounds-value">${bounds.north != null ? bounds.north.toFixed(6) : '—'}°N</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Slope Color Legend -->
+                <div class="sidebar-section fade-in" style="animation-delay: 0.3s;">
+                    <div class="section-title">Slope Color Legend</div>
+                    <div class="legend-gradient"></div>
+                    <div class="legend-labels">
+                        <span>0° Flat</span>
+                        <span>15° Moderate</span>
+                        <span>30° Steep</span>
+                        <span>60°+ Extreme</span>
+                    </div>
                 </div>
             `;
         }
 
-        function saveBlockData(key) {
-            blockDatabase[key] = {
-                tileNo: document.getElementById('edit-tileNo').value,
-                datasetName: document.getElementById('edit-dataset').value,
-                theme: document.getElementById('edit-theme').value,
-                satellite: document.getElementById('edit-satellite').value,
-                resolution: "User Defined",
-                status: "Data Attached"
-            };
+        function renderNdviResults(result, stats, bounds, container) {
+            const ndvi = stats.ndvi || {};
+            const dist = result.distribution || {};
+            const meanNdvi = ndvi.mean || 0;
+            const ndviColor = getNdviColor(meanNdvi);
+            const ndviLabel = getNdviLabel(meanNdvi);
 
-            selectedLayer.setStyle({ color: "#28a745", fillOpacity: 0.35 });
-            alert("Block " + key + " updated successfully!");
+            container.innerHTML = `
+                <!-- Dataset Info -->
+                <div class="sidebar-section fade-in">
+                    <div class="section-title">Dataset</div>
+                    <div class="dataset-info">
+                        <div class="dataset-info-row">
+                            <span class="info-label">Name</span>
+                            <span class="info-value">${result.dataset_name || '—'}</span>
+                        </div>
+                        <div class="dataset-info-row">
+                            <span class="info-label">Type</span>
+                            <span class="info-value">${result.dataset_type || '—'}</span>
+                        </div>
+                        <div class="dataset-info-row">
+                            <span class="info-label">CRS</span>
+                            <span class="info-value">${result.source?.crs || '—'}</span>
+                        </div>
+                        <div class="dataset-info-row">
+                            <span class="info-label">Analysis ID</span>
+                            <span class="info-value" style="font-size:10px; color:#64748b;">${result.analysis_id || '—'}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- NDVI Statistics -->
+                <div class="sidebar-section fade-in" style="animation-delay: 0.1s;">
+                    <div class="section-title">Vegetation Index (NDVI)</div>
+                    <div class="stats-grid">
+                        <div class="stat-card full-width" style="border-color: ${ndviColor}40;">
+                            <div class="stat-label">Mean NDVI</div>
+                            <div style="display: flex; align-items: baseline; gap: 12px;">
+                                <div class="stat-value" style="color: ${ndviColor};">${meanNdvi.toFixed(3)}</div>
+                                <span style="font-size: 12px; color: ${ndviColor}; font-weight: 600;">${ndviLabel}</span>
+                            </div>
+                        </div>
+
+                        <div class="stat-card">
+                            <div class="stat-label">NDVI Min</div>
+                            <div class="stat-value">${ndvi.min != null ? ndvi.min.toFixed(3) : '—'}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">NDVI Max</div>
+                            <div class="stat-value">${ndvi.max != null ? ndvi.max.toFixed(3) : '—'}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">NDVI Median</div>
+                            <div class="stat-value">${ndvi.median != null ? ndvi.median.toFixed(3) : '—'}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Std Dev</div>
+                            <div class="stat-value">${ndvi.std != null ? ndvi.std.toFixed(3) : '—'}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- NDVI Distribution -->
+                <div class="sidebar-section fade-in" style="animation-delay: 0.15s;">
+                    <div class="section-title">NDVI Distribution</div>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-label">Very Low (&lt;0)</div>
+                            <div class="stat-value">${dist.very_low != null ? dist.very_low.toFixed(1) : '—'}<span class="stat-unit">%</span></div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Low (0–0.2)</div>
+                            <div class="stat-value">${dist.low != null ? dist.low.toFixed(1) : '—'}<span class="stat-unit">%</span></div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Moderate (0.2–0.5)</div>
+                            <div class="stat-value">${dist.moderate != null ? dist.moderate.toFixed(1) : '—'}<span class="stat-unit">%</span></div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">High (&gt;0.5)</div>
+                            <div class="stat-value">${dist.high != null ? dist.high.toFixed(1) : '—'}<span class="stat-unit">%</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Spatial Bounds -->
+                <div class="sidebar-section fade-in" style="animation-delay: 0.2s;">
+                    <div class="section-title">Spatial Bounds</div>
+                    <div class="bounds-info">
+                        <div class="bounds-row">
+                            <span class="bounds-label">West</span>
+                            <span class="bounds-value">${bounds.west != null ? bounds.west.toFixed(6) : '—'}°E</span>
+                        </div>
+                        <div class="bounds-row">
+                            <span class="bounds-label">East</span>
+                            <span class="bounds-value">${bounds.east != null ? bounds.east.toFixed(6) : '—'}°E</span>
+                        </div>
+                        <div class="bounds-row">
+                            <span class="bounds-label">South</span>
+                            <span class="bounds-value">${bounds.south != null ? bounds.south.toFixed(6) : '—'}°N</span>
+                        </div>
+                        <div class="bounds-row">
+                            <span class="bounds-label">North</span>
+                            <span class="bounds-value">${bounds.north != null ? bounds.north.toFixed(6) : '—'}°N</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- NDVI Color Legend -->
+                <div class="sidebar-section fade-in" style="animation-delay: 0.3s;">
+                    <div class="section-title">NDVI Color Legend</div>
+                    <div class="legend-gradient" style="background: linear-gradient(90deg, #3b82f6, #a3a3a3, #84cc16, #22c55e, #15803d);"></div>
+                    <div class="legend-labels">
+                        <span>&lt;0 Water</span>
+                        <span>0.2 Bare</span>
+                        <span>0.4 Low</span>
+                        <span>0.6 Mod</span>
+                        <span>&gt;0.6 Dense</span>
+                    </div>
+                </div>
+            `;
         }
+
+        // ─────────────────────────────────────────────
+        // Compass direction from degrees
+        // ─────────────────────────────────────────────
+        function getCompassDirection(degrees) {
+            const dirs = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
+            const idx = Math.round(degrees / 22.5) % 16;
+            return `Facing ${dirs[idx]} (${degrees.toFixed(0)}°)`;
+        }
+
+        // ─────────────────────────────────────────────
+        // Wire up events
+        // ─────────────────────────────────────────────
+        document.getElementById('dataset-selector').addEventListener('change', () => {
+            document.getElementById('btn-terrain').disabled = false;
+            document.getElementById('btn-ndvi').disabled = false;
+        });
+
+        document.getElementById('btn-terrain').addEventListener('click', () => runAnalysis('terrain'));
+        document.getElementById('btn-ndvi').addEventListener('click', () => runAnalysis('ndvi'));
+
+        // ─────────────────────────────────────────────
+        // Bootstrap
+        // ─────────────────────────────────────────────
+        loadDatasets();
     </script>
 </body>
 </html>

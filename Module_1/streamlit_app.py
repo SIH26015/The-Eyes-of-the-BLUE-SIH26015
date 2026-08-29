@@ -1,3 +1,6 @@
+# DEPRECATED: Use app.py instead. This file is kept as a backup reference.
+# Streamlit will only load one app per directory; run `streamlit run app.py`.
+
 import streamlit as st
 import folium
 from streamlit_folium import st_folium

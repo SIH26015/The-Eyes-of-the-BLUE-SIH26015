@@ -7,7 +7,7 @@
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f7fa; color: #2d3748; }
-        
+
         .navbar {
             background: #1a202c;
             color: white;
@@ -27,10 +27,10 @@
             transition: color 0.2s;
         }
         .navbar-links a:hover, .navbar-links a.active { color: white; }
-        
+
         .container { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
         .page-title { font-size: 24px; font-weight: 700; margin-bottom: 24px; color: #1a202c; }
-        
+
         .card {
             background: white;
             border-radius: 10px;
@@ -39,7 +39,7 @@
             margin-bottom: 24px;
         }
         .card-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; color: #1a202c; }
-        
+
         .upload-area {
             border: 2px dashed #cbd5e0;
             border-radius: 10px;
@@ -54,7 +54,7 @@
         .upload-area h3 { font-size: 18px; color: #2d3748; margin-bottom: 8px; }
         .upload-area p { color: #718096; font-size: 14px; margin-bottom: 16px; }
         .upload-icon { font-size: 40px; color: #a0aec0; margin-bottom: 12px; }
-        
+
         .btn {
             display: inline-flex;
             align-items: center;
@@ -77,9 +77,9 @@
         .btn-danger { background: #e53e3e; }
         .btn-danger:hover { background: #c53030; }
         .btn-sm { padding: 6px 12px; font-size: 13px; }
-        
+
         input[type="file"] { display: none; }
-        
+
         .file-preview {
             display: none;
             align-items: center;
@@ -96,10 +96,10 @@
         .file-details { line-height: 1.4; }
         .file-name { font-weight: 600; font-size: 14px; }
         .file-size { font-size: 12px; color: #718096; }
-        
+
         .result-section { display: none; }
         .result-section.visible { display: block; }
-        
+
         .step-list { list-style: none; }
         .step-item {
             display: flex;
@@ -124,7 +124,7 @@
         .step-warning { background: #feebc8; color: #744210; }
         .step-complete { background: #2b6cb0; color: white; }
         .step-error { background: #fed7e2; color: #702459; }
-        
+
         .result-meta {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -135,7 +135,7 @@
         .meta-label { font-size: 12px; color: #718096; text-transform: uppercase; letter-spacing: 0.5px; }
         .meta-value { font-size: 15px; font-weight: 600; color: #1a202c; }
         .meta-value.unknown { color: #a0aec0; font-weight: 400; font-style: italic; }
-        
+
         .provenance {
             margin-top: 16px;
             padding: 16px;
@@ -171,7 +171,7 @@
         .badge-high { background: #c6f6d5; color: #22543d; }
         .badge-medium { background: #feebc8; color: #744210; }
         .badge-low { background: #fed7e2; color: #702459; }
-        
+
         .status-banner {
             display: none;
             align-items: center;
@@ -185,22 +185,22 @@
         .status-banner.success { background: #f0fff4; color: #22543d; border: 1px solid #9ae6b4; }
         .status-banner.error { background: #fff5f5; color: #742a2a; border: 1px solid #feb2b2; }
         .status-banner.warning { background: #fffaf0; color: #744210; border: 1px solid #fbd38d; }
-        
+
         .catalog-table { width: 100%; border-collapse: collapse; }
         .catalog-table th, .catalog-table td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
         .catalog-table th { background: #f7fafc; font-weight: 600; color: #4a5568; font-size: 13px; }
         .catalog-table td { color: #2d3748; font-size: 14px; }
         .catalog-table tr:hover { background: #fafbfc; }
-        
+
         .badge-ready { background: #c6f6d5; color: #22543d; }
         .badge-processing { background: #feebc8; color: #744210; }
         .badge-quarantined { background: #fed7e2; color: #702459; }
         .badge-already_exists { background: #edf2f7; color: #4a5568; }
         .badge-needs_review { background: #feebc8; color: #744210; }
-        
+
         .empty-state { text-align: center; padding: 48px 24px; color: #a0aec0; }
         .empty-state-icon { font-size: 40px; margin-bottom: 12px; }
-        
+
         .modal-overlay {
             display: none;
             position: fixed;
@@ -231,14 +231,14 @@
         .modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: #a0aec0; }
         .modal-close:hover { color: #2d3748; }
         .modal-body { padding: 24px; }
-        
+
         .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
         .detail-item { display: flex; flex-direction: column; gap: 4px; }
         .detail-label { font-size: 12px; color: #718096; text-transform: uppercase; letter-spacing: 0.5px; }
         .detail-value { font-size: 14px; font-weight: 600; }
-        
+
         .actions { display: flex; gap: 12px; margin-top: 24px; }
-        
+
         @media (max-width: 640px) {
             .container { padding: 16px; }
             .result-meta { grid-template-columns: 1fr; }
@@ -263,23 +263,20 @@
             <div class="card-title">Upload Dataset</div>
             <div class="upload-area" id="uploadArea">
                 <div class="upload-icon">📂</div>
-                <h3>Drag and drop a geospatial dataset</h3>
+                <h3>Drag and drop geospatial datasets</h3>
                 <p>Supported: ZIP, TIF, TIFF, XML, SHP, GeoJSON, CSV</p>
                 <button class="btn" id="browseBtn">Browse Files</button>
-                <input type="file" id="fileInput" accept=".zip,.tif,.tiff,.xml,.shp,.geojson,.json,.csv">
+                <input type="file" id="fileInput" accept=".zip,.tif,.tiff,.xml,.shp,.geojson,.json,.csv" multiple>
             </div>
-            
+
             <div class="file-preview" id="filePreview">
-                <div class="file-info">
-                    <div class="file-icon">📄</div>
-                    <div class="file-details">
-                        <div class="file-name" id="fileName">—</div>
-                        <div class="file-size" id="fileSize">—</div>
-                    </div>
+                <div style="width:100%;">
+                    <div style="font-weight:600;font-size:14px;margin-bottom:8px;">Selected Files</div>
+                    <div id="fileList" style="display:flex;flex-direction:column;gap:8px;"></div>
                 </div>
-                <div style="display:flex;gap:8px;">
-                    <button class="btn btn-sm" id="uploadBtn">Upload</button>
-                    <button class="btn btn-sm btn-danger" id="removeBtn">Remove</button>
+                <div style="display:flex;gap:8px;margin-top:12px;">
+                    <button class="btn btn-sm" id="uploadBtn">Upload All</button>
+                    <button class="btn btn-sm btn-danger" id="removeBtn">Clear All</button>
                 </div>
             </div>
         </div>
@@ -324,7 +321,7 @@
     </div>
 
     <script>
-        const API_BASE = '';
+        const API_BASE = 'http://127.0.0.1:8000';
         const SOURCE_LABELS = {
             'xml': 'XML Metadata',
             'geotiff': 'GeoTIFF',
@@ -349,7 +346,7 @@
         const modalClose = document.getElementById('modalClose');
         const modalBody = document.getElementById('modalBody');
 
-        let selectedFile = null;
+        let selectedFiles = [];
 
         browseBtn.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -357,7 +354,7 @@
         });
 
         uploadArea.addEventListener('click', () => fileInput.click());
-        
+
         uploadArea.addEventListener('dragover', (e) => {
             e.preventDefault();
             uploadArea.classList.add('dragover');
@@ -372,13 +369,14 @@
             e.preventDefault();
             uploadArea.classList.remove('dragover');
             if (e.dataTransfer.files.length > 0) {
-                selectFile(e.dataTransfer.files[0]);
+                addFiles(e.dataTransfer.files);
             }
         });
 
         fileInput.addEventListener('change', (e) => {
             if (e.target.files.length > 0) {
-                selectFile(e.target.files[0]);
+                addFiles(e.target.files);
+                fileInput.value = '';
             }
         });
 
@@ -390,18 +388,46 @@
             return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         }
 
-        function selectFile(file) {
-            selectedFile = file;
-            fileName.textContent = file.name;
-            fileSize.textContent = formatBytes(file.size);
+        function addFiles(files) {
+            const newFiles = Array.from(files);
+            newFiles.forEach(file => {
+                if (!selectedFiles.some(f => f.name === file.name && f.size === file.size)) {
+                    selectedFiles.push(file);
+                }
+            });
+            renderFileList();
             filePreview.classList.add('visible');
             uploadArea.style.display = 'none';
             resultSection.classList.remove('visible');
             statusBanner.classList.remove('visible');
         }
 
+        function removeFile(index) {
+            selectedFiles.splice(index, 1);
+            renderFileList();
+            if (selectedFiles.length === 0) {
+                clearSelection();
+            }
+        }
+
+        function renderFileList() {
+            const list = document.getElementById('fileList');
+            list.innerHTML = selectedFiles.map((file, index) => `
+                <div style="display:flex;align-items:center;justify-content:space-between;background:#f7fafc;border:1px solid #e2e8f0;border-radius:6px;padding:10px 12px;">
+                    <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+                        <span style="font-size:18px;">📄</span>
+                        <div style="min-width:0;">
+                            <div style="font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${file.name}</div>
+                            <div style="font-size:12px;color:#718096;">${formatBytes(file.size)}</div>
+                        </div>
+                    </div>
+                    <button class="btn btn-sm btn-danger" onclick="removeFile(${index})" style="padding:4px 10px;font-size:12px;">Remove</button>
+                </div>
+            `).join('');
+        }
+
         function clearSelection() {
-            selectedFile = null;
+            selectedFiles = [];
             fileInput.value = '';
             filePreview.classList.remove('visible');
             uploadArea.style.display = 'block';
@@ -412,17 +438,19 @@
         removeBtn.addEventListener('click', clearSelection);
 
         uploadBtn.addEventListener('click', async () => {
-            if (!selectedFile) return;
-            
+            if (selectedFiles.length === 0) return;
+
             uploadBtn.disabled = true;
             removeBtn.disabled = true;
             statusBanner.className = 'status-banner visible';
             statusBanner.classList.add('warning');
-            statusBanner.innerHTML = '<span>⏳ Processing dataset...</span>';
+            statusBanner.innerHTML = '<span>⏳ Uploading files...</span>';
             resultSection.classList.remove('visible');
 
             const formData = new FormData();
-            formData.append('file', selectedFile);
+            selectedFiles.forEach(file => {
+                formData.append('file', file);
+            });
 
             try {
                 const response = await fetch(`${API_BASE}/api/datasets/upload`, {
@@ -431,13 +459,12 @@
                 });
 
                 const data = await response.json();
-                const result = (data.results || [])[0];
 
-                if (!result) {
-                    throw new Error('No result returned from server');
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Upload failed');
                 }
 
-                renderResult(result);
+                renderBatchResults(data.results || [], data.summary);
                 loadRecentImports();
             } catch (error) {
                 statusBanner.className = 'status-banner visible error';
@@ -448,158 +475,96 @@
             }
         });
 
-        function renderResult(result) {
+        function renderBatchResults(results, summary) {
             resultSection.classList.add('visible');
             statusBanner.className = 'status-banner visible';
-            
-            const status = result.status || 'unknown';
-            const isSuccess = status === 'success' || status === 'ready';
-            const isNeedsReview = status === 'needs_review';
-            const isQuarantined = status === 'quarantined';
-            const isDuplicate = status === 'already_exists';
-            
-            if (isSuccess) {
-                statusBanner.classList.add('success');
-                statusBanner.innerHTML = '<span>✓ Dataset imported successfully</span>';
-            } else if (isQuarantined) {
-                statusBanner.classList.add('error');
-                statusBanner.innerHTML = `<span>⚠ Import failed: ${result.error_reason || result.reason || 'Unknown error'}</span>`;
-            } else if (isDuplicate) {
-                statusBanner.classList.add('warning');
-                statusBanner.innerHTML = '<span>⚠ Dataset already exists</span>';
-            } else if (isNeedsReview) {
-                statusBanner.classList.add('warning');
-                statusBanner.innerHTML = '<span>⚠ Dataset needs review</span>';
-            } else {
-                statusBanner.classList.add('warning');
-                statusBanner.innerHTML = `<span>⚠ Status: ${status}</span>`;
-            }
 
-            const stepsHtml = (result.steps || []).map(s => {
-                let iconClass = 'step-pending';
-                let icon = '○';
-                if (s.status === 'done') { iconClass = 'step-done'; icon = '✓'; }
-                else if (s.status === 'warning') { iconClass = 'step-warning'; icon = '⚠'; }
-                else if (s.status === 'complete') { iconClass = 'step-complete'; icon = '★'; }
-                else if (s.status === 'error') { iconClass = 'step-error'; icon = '✗'; }
-                return `<li class="step-item"><span class="step-icon ${iconClass}">${icon}</span>${s.step}</li>`;
-            }).join('');
+            const total = results.length;
+            const successful = summary?.processed || 0;
+            const duplicates = summary?.duplicates || 0;
+            const errors = summary?.errors || 0;
+            const quarantined = summary?.quarantined || 0;
 
-            let metaHtml = '';
-            if (isSuccess) {
-                const fields = [
-                    { label: 'Dataset Name', value: result.dataset_name, key: 'dataset_name' },
-                    { label: 'Type', value: result.dataset_type, key: 'dataset_type' },
-                    { label: 'Tile', value: result.tile, key: 'tile' },
-                    { label: 'Version', value: result.version, key: 'version' },
-                    { label: 'Bounds', value: result.bounds ? (Array.isArray(result.bounds) ? result.bounds.join(', ') : result.bounds) : null, key: 'bounds' },
-                    { label: 'Resolution', value: result.resolution, key: 'resolution' },
-                    { label: 'Format', value: result.format, key: 'format' },
-                    { label: 'Source', value: result.source, key: 'source' },
-                ];
-                
-                metaHtml = '<div class="result-meta">';
-                fields.forEach(f => {
-                    const display = f.value || 'Not available';
-                    const isUnknown = !f.value;
-                    metaHtml += `<div class="meta-item">
-                        <div class="meta-label">${f.label}</div>
-                        <div class="meta-value ${isUnknown ? 'unknown' : ''}">${display}</div>
-                    </div>`;
-                });
-                metaHtml += '</div>';
+            statusBanner.classList.add(total > 0 && errors === 0 && quarantined === 0 ? 'success' : 'warning');
+            statusBanner.innerHTML = `<span>✓ Upload complete: ${successful} imported, ${duplicates} duplicates, ${errors} errors, ${quarantined} quarantined</span>`;
 
-                if (result.metadata_provenance) {
-                    metaHtml += '<div class="provenance">';
-                    metaHtml += '<div class="provenance-header" onclick="toggleProvenance()">';
-                    metaHtml += '<span class="provenance-title">Metadata Details</span>';
-                    metaHtml += '<span class="provenance-toggle" id="provToggle">Show</span>';
-                    metaHtml += '</div>';
-                    metaHtml += '<div class="provenance-body" id="provBody">';
-                    
-                    const provEntries = {
-                        'Tile': result.metadata_provenance.tile,
-                        'Version': result.metadata_provenance.version,
-                        'Dataset Type': result.metadata_provenance.dataset_type,
-                    };
-                    
-                    for (const [key, val] of Object.entries(provEntries)) {
-                        if (val) {
-                            const confClass = val.confidence ? val.confidence.toLowerCase() : 'low';
-                            const sourceLabel = SOURCE_LABELS[val.source] || val.source || '—';
-                            metaHtml += `<div class="prov-item">
-                                <span class="prov-key">${key}</span>
-                                <span class="prov-val">${val.value || 'Not available'} <span class="badge badge-${confClass}">${val.confidence || 'UNKNOWN'}</span></span>
-                            </div>`;
-                            metaHtml += `<div class="prov-item">
-                                <span class="prov-key">Source</span>
-                                <span class="prov-val">${sourceLabel}</span>
-                            </div>`;
-                        }
-                    }
-                    metaHtml += '</div></div>';
-                }
+            let html = '<div style="margin-bottom:16px;padding:12px;background:#f7fafc;border-radius:8px;font-size:14px;">';
+            html += `<strong>Summary:</strong> Total: ${total} · Success: ${successful} · Duplicates: ${duplicates} · Errors: ${errors} · Quarantined: ${quarantined}`;
+            html += '</div>';
 
-                if (result.location) {
-                    metaHtml += `<div style="margin-top:16px;padding:12px;background:#f7fafc;border-radius:6px;font-family:monospace;font-size:13px;color:#4a5568;">Stored at: ${result.location}</div>`;
-                }
+            html += '<div style="display:flex;flex-direction:column;gap:12px;">';
+            results.forEach(result => {
+                const status = result.status || 'unknown';
+                const isSuccess = status === 'success';
+                const isNeedsReview = status === 'needs_review';
+                const isQuarantined = status === 'quarantined';
+                const isDuplicate = status === 'already_exists';
 
-                if (result.files && result.files.length > 0) {
-                    metaHtml += '<div style="margin-top:16px;">';
-                    metaHtml += '<div style="font-size:13px;font-weight:600;color:#4a5568;margin-bottom:8px;">Files:</div>';
-                    metaHtml += '<div style="background:#f7fafc;border-radius:6px;padding:12px;font-size:13px;">';
-                    result.files.forEach(f => {
-                        const icon = f.role === 'primary' ? '🗺' : f.role === 'metadata' ? '📄' : f.role === 'documentation' ? '📖' : '📋';
-                        metaHtml += `<div style="padding:4px 0;color:#2d3748;">${icon} ${f.name} <span style="color:#a0aec0;font-size:11px;">(${f.type})</span></div>`;
+                let statusColor = '#718096';
+                let statusIcon = '○';
+                if (isSuccess) { statusColor = '#22543d'; statusIcon = '✓'; }
+                else if (isNeedsReview) { statusColor = '#744210'; statusIcon = '⚠'; }
+                else if (isQuarantined) { statusColor = '#702459'; statusIcon = '✗'; }
+                else if (isDuplicate) { statusColor = '#4a5568'; statusIcon = '⚠'; }
+                else if (status === 'error') { statusColor = '#742a2a'; statusIcon = '✗'; }
+
+                html += `<div style="border:1px solid #e2e8f0;border-radius:8px;padding:16px;background:white;">`;
+                html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">`;
+                html += `<span style="color:${statusColor};font-size:16px;">${statusIcon}</span>`;
+                html += `<strong style="font-size:14px;color:#2d3748;">${result.file || 'Unknown file'}</strong>`;
+                html += `<span style="margin-left:auto;font-size:12px;color:${statusColor};text-transform:uppercase;font-weight:600;">${status.replace('_', ' ')}</span>`;
+                html += `</div>`;
+
+                if (isSuccess || isNeedsReview) {
+                    const fields = [
+                        { label: 'Dataset Name', value: result.dataset_name },
+                        { label: 'Type', value: result.dataset_type },
+                        { label: 'Tile', value: result.tile },
+                        { label: 'Version', value: result.version },
+                    ];
+                    html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;font-size:13px;">';
+                    fields.forEach(f => {
+                        html += `<div><span style="color:#718096;">${f.label}:</span> <strong>${f.value || '—'}</strong></div>`;
                     });
-                    metaHtml += '</div></div>';
-                }
-            }
+                    if (result.dataset_id) {
+                        html += `<div><span style="color:#718096;">ID:</span> <strong>${result.dataset_id}</strong></div>`;
+                    }
+                    if (result.bounds) {
+                        const b = result.bounds;
+                        html += `<div><span style="color:#718096;">Bounds:</span> ${b.west || b.min_lon || '?'}, ${b.south || b.min_lat || '?'} → ${b.east || b.max_lon || '?'}, ${b.north || b.max_lat || '?'}</div>`;
+                    }
+                    html += '</div>';
 
-            resultContent.innerHTML = `
-                <ul class="step-list">${stepsHtml}</ul>
-                ${metaHtml}
-                ${isNeedsReview ? `
-                <div style="margin-top:16px;padding:16px;background:#fffaf0;border-radius:8px;border:1px solid #fbd38d;">
-                    <div style="font-weight:600;color:#744210;margin-bottom:12px;">Manual Classification</div>
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-                        <div>
-                            <label style="font-size:12px;color:#718096;display:block;margin-bottom:4px;">Theme</label>
-                            <select id="classifyTheme" style="width:100%;padding:8px;border:1px solid #e2e8f0;border-radius:6px;">
-                                <option value="terrain">Terrain</option>
-                                <option value="satellite">Satellite</option>
-                                <option value="landcover">Landcover</option>
-                                <option value="vector">Vector</option>
-                                <option value="unknown">Unknown</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label style="font-size:12px;color:#718096;display:block;margin-bottom:4px;">Dataset Type</label>
-                            <select id="classifyType" style="width:100%;padding:8px;border:1px solid #e2e8f0;border-radius:6px;">
-                                <option value="DEM">DEM</option>
-                                <option value="DSM">DSM</option>
-                                <option value="LULC">LULC</option>
-                                <option value="VECTOR">VECTOR</option>
-                                <option value="UNKNOWN">UNKNOWN</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label style="font-size:12px;color:#718096;display:block;margin-bottom:4px;">Tile</label>
-                            <input type="text" id="classifyTile" value="${result.tile || ''}" placeholder="e.g. F43U" style="width:100%;padding:8px;border:1px solid #e2e8f0;border-radius:6px;">
-                        </div>
-                        <div>
-                            <label style="font-size:12px;color:#718096;display:block;margin-bottom:4px;">Version</label>
-                            <input type="text" id="classifyVersion" value="${result.version || ''}" placeholder="e.g. V1" style="width:100%;padding:8px;border:1px solid #e2e8f0;border-radius:6px;">
-                        </div>
-                    </div>
-                    <button class="btn" onclick="submitClassification(${result.dataset_id})" style="margin-top:12px;">Save Classification</button>
-                </div>
-                ` : ''}
-                <div class="actions">
-                    <button class="btn" onclick="clearSelection()">Import Another Dataset</button>
-                    ${isSuccess ? `<button class="btn btn-secondary" onclick="window.location.href='/data-catalog'">View Catalog</button>` : ''}
-                </div>
-            `;
+                    if (result.metadata_provenance) {
+                        html += '<div style="margin-top:10px;padding:10px;background:#f7fafc;border-radius:6px;font-size:12px;">';
+                        html += '<strong>Metadata Provenance:</strong><br>';
+                        for (const [key, val] of Object.entries(result.metadata_provenance)) {
+                            if (val && val.value) {
+                                html += `${key}: ${val.value} <span style="color:#718096;">(${val.source}, ${val.confidence})</span><br>`;
+                            }
+                        }
+                        html += '</div>';
+                    }
+
+                    if (result.files && result.files.length > 0) {
+                        html += '<div style="margin-top:10px;font-size:12px;color:#4a5568;">Files: ' + result.files.map(f => `${f.name} (${f.type})`).join(', ') + '</div>';
+                    }
+                }
+
+                if (isQuarantined || status === 'error') {
+                    html += `<div style="margin-top:8px;font-size:13px;color:#742a2a;">${result.error || result.reason || 'Unknown error'}</div>`;
+                }
+
+                html += '</div>';
+            });
+            html += '</div>';
+
+            html += '<div class="actions" style="margin-top:20px;">';
+            html += '<button class="btn" onclick="clearSelection()">Import More Datasets</button>';
+            html += '<button class="btn btn-secondary" onclick="window.location.href=\'/data-catalog\'">View Catalog</button>';
+            html += '</div>';
+
+            resultContent.innerHTML = html;
         }
 
         function toggleProvenance() {
@@ -639,7 +604,7 @@
                 const data = await response.json();
                 const tbody = document.getElementById('recentTable');
                 tbody.innerHTML = '';
-                
+
                 if (data.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No datasets imported yet</td></tr>';
                     return;
@@ -651,12 +616,12 @@
                                    ds.status === 'ALREADY_EXISTS' ? 'Already Exists' :
                                    ds.status === 'READY' ? 'Ready' : 'Processing';
                     const fileCount = ds.file_count || '-';
-                    
+
                     const badgeClass = ds.status === 'READY' ? 'badge-ready' :
                                        ds.status === 'QUARANTINED' ? 'badge-quarantined' :
                                        ds.status === 'ALREADY_EXISTS' ? 'badge-already_exists' :
                                        ds.status === 'NEEDS_REVIEW' ? 'badge-needs_review' : 'badge-processing';
-                    
+
                     const row = document.createElement('tr');
                     row.style.cursor = 'pointer';
                     row.innerHTML = `
@@ -679,7 +644,7 @@
             try {
                 const response = await fetch(`${API_BASE}/api/datasets/${id}`);
                 const ds = await response.json();
-                
+
                 let html = '<div class="detail-grid">';
                 const fields = [
                     ['Dataset Name', ds.dataset_name],
@@ -700,19 +665,19 @@
                     html += `<div class="detail-item"><div class="detail-label">${label}</div><div class="detail-value">${display}</div></div>`;
                 });
                 html += '</div>';
-                
+
                 if (ds.min_lon && ds.max_lon && ds.min_lat && ds.max_lat) {
                     html += `<div style="margin-top:16px;padding:12px;background:#f7fafc;border-radius:6px;font-size:14px;">
                         <strong>Bounds:</strong> ${ds.min_lon}, ${ds.min_lat} → ${ds.max_lon}, ${ds.max_lat}
                     </div>`;
                 }
-                
+
                 if (ds.error_reason) {
                     html += `<div style="margin-top:12px;padding:12px;background:#fff5f5;border-radius:6px;color:#742a2a;font-size:14px;">
                         <strong>Error:</strong> ${ds.error_reason}
                     </div>`;
                 }
-                
+
                 modalBody.innerHTML = html;
                 detailModal.classList.add('open');
             } catch (e) {

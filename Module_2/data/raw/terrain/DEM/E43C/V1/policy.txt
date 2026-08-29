@@ -1,0 +1,12 @@
+Privacy Policy:
+
+•	The information user provide on NRSC/ISRO Web site is strictly voluntary and will be strictly used only for its intended purpose. If you do not want to share any information with our web sites, simply do not provide it and keep the input text blank. However, not providing certain information in case of application that necessarily required some information may result in that NRSC/ISRO inability to provide you with the information or services you desire. NRSC/ISRO websites are collecting some information from user either through automatically or through manual inputs by the user. 
+
+•	NRSC/ISRO web site may collect automatically and temporarily store certain technical information about user visit for use in the web site management, improvinf efficiency and security purposes. This information may include: 
+•	User IP addresses.
+•	Internet domain from which service is accessed.
+•	The type of web browser, operating system, date and time of web access, user name (if applicable) and name of the files and services accessed.
+
+•	Our web sites use session and persistent cookies for technical purposes such as to enable better navigation through the site, session management, or to allow users to customize their preferences for interacting with the web site. These cookies are strictly to the selected user session. 
+
+•	If user do not wish to have session or persistent cookies stored on his/her machine, he/she can turn them off in the web browser. However, this may affect the functioning of some web applications as per desired service. This information is only used to help our web applications more useful to the users. 

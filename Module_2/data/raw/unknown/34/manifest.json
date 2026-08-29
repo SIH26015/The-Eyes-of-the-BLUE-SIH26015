@@ -1,0 +1,65 @@
+{
+  "dataset_id": 34,
+  "dataset_name": "sentinel_synthetic.tif",
+  "dataset_type": "UNKNOWN",
+  "theme": "unknown",
+  "tile": "UNKNOWN",
+  "version": "UNKNOWN",
+  "status": "NEEDS_REVIEW",
+  "source": null,
+  "platform": null,
+  "sensor": null,
+  "bits_per_pixel": null,
+  "files": [
+    {
+      "name": "sentinel_synthetic.tif",
+      "type": "GeoTIFF",
+      "role": "primary"
+    }
+  ],
+  "spatial_metadata": {
+    "bounds": {
+      "west": 72.0,
+      "south": 18.0,
+      "east": 73.0,
+      "north": 19.0,
+      "source": "geotiff",
+      "confidence": "high",
+      "crs": null
+    },
+    "resolution": null,
+    "format": null,
+    "crs": "EPSG:4326"
+  },
+  "ingested_at": null,
+  "original_filename": "sentinel_synthetic.tif",
+  "classification": null,
+  "metadata_provenance": {
+    "tile": {
+      "value": "UNKNOWN",
+      "source": "unknown",
+      "confidence": "unknown"
+    },
+    "version": {
+      "value": "UNKNOWN",
+      "source": "unknown",
+      "confidence": "unknown"
+    },
+    "dataset_type": {
+      "value": "UNKNOWN",
+      "source": "unknown",
+      "confidence": "unknown"
+    },
+    "theme": {
+      "value": "unknown",
+      "source": "unknown",
+      "confidence": "unknown"
+    },
+    "dataset_name": {
+      "value": "sentinel_synthetic.tif",
+      "source": "unknown",
+      "confidence": "UNKNOWN"
+    }
+  },
+  "quality": null
+}

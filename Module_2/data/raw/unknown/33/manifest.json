@@ -1,0 +1,65 @@
+{
+  "dataset_id": 33,
+  "dataset_name": "satellite_test.tif",
+  "dataset_type": "UNKNOWN",
+  "theme": "unknown",
+  "tile": "UNKNOWN",
+  "version": "UNKNOWN",
+  "status": "NEEDS_REVIEW",
+  "source": null,
+  "platform": null,
+  "sensor": null,
+  "bits_per_pixel": null,
+  "files": [
+    {
+      "name": "satellite_test.tif",
+      "type": "GeoTIFF",
+      "role": "primary"
+    }
+  ],
+  "spatial_metadata": {
+    "bounds": {
+      "west": 72.0,
+      "south": 18.0,
+      "east": 73.0,
+      "north": 19.0,
+      "source": "geotiff",
+      "confidence": "high",
+      "crs": null
+    },
+    "resolution": null,
+    "format": null,
+    "crs": "EPSG:4326"
+  },
+  "ingested_at": null,
+  "original_filename": "satellite_test.tif",
+  "classification": null,
+  "metadata_provenance": {
+    "tile": {
+      "value": "UNKNOWN",
+      "source": "unknown",
+      "confidence": "unknown"
+    },
+    "version": {
+      "value": "UNKNOWN",
+      "source": "unknown",
+      "confidence": "unknown"
+    },
+    "dataset_type": {
+      "value": "UNKNOWN",
+      "source": "unknown",
+      "confidence": "unknown"
+    },
+    "theme": {
+      "value": "unknown",
+      "source": "unknown",
+      "confidence": "unknown"
+    },
+    "dataset_name": {
+      "value": "satellite_test.tif",
+      "source": "unknown",
+      "confidence": "UNKNOWN"
+    }
+  },
+  "quality": null
+}
