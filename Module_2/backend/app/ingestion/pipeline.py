@@ -5,8 +5,8 @@ from pathlib import Path
 from typing import Dict, Any, List, Optional
 import shutil
 
-from backend.app.ingestion.metadata.xml_parser import parse_xml
-from backend.app.ingestion.metadata.geotiff_reader import read_geotiff_metadata
+from backend.app.ingestion.parser.xml_parser import parse_xml
+from backend.app.ingestion.parser.geotiff_reader import read_geotiff_metadata
 from backend.app.ingestion.inspector import inspect_dataset
 from backend.app.ingestion.classifier import classify_dataset
 from backend.app.ingestion.validator import validate_upload, validate_dataset
@@ -19,7 +19,7 @@ from backend.app.ingestion.catalog import (
     get_conn,
 )
 from backend.app.ingestion.name_parser import parse_dataset_name
-from backend.app.ingestion.metadata.resolver import MetadataResolver
+from backend.app.ingestion.parser.resolver import MetadataResolver
 
 
 def _file_hash(file_path: Path) -> str:

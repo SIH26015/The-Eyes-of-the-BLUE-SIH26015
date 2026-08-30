@@ -39,23 +39,24 @@ Module_1/public/uploads/*
 
 # Module 0 runtime
 *.db
+module0.db
 
-# Module 2 runtime/generated data
-Module_2/data/catalog/*.db
-Module_2/data/incoming/*
-Module_2/data/processed/*
-Module_2/data/processing/*
-Module_2/data/quarantine/*
-Module_2/data/analysis/*
+# Shared runtime/generated data
+data/catalog/*.db
+data/incoming/*
+data/processed/*
+data/processing/*
+data/quarantine/*
+data/analysis/*
 
 # Large geospatial source data
-Module_2/data/raw/**/*.tif
-Module_2/data/raw/**/*.tiff
-Module_2/data/raw/**/*.zip
-Module_2/data/raw/**/*.ZIP
+data/raw/**/*.tif
+data/raw/**/*.tiff
+data/raw/**/*.zip
+data/raw/**/*.ZIP
 
 # Keep directory placeholders
-!Module_2/data/incoming/.gitkeep
-!Module_2/data/processed/.gitkeep
-!Module_2/data/processing/.gitkeep
-!Module_2/data/quarantine/.gitkeep
+!data/incoming/.gitkeep
+!data/processed/.gitkeep
+!data/processing/.gitkeep
+!data/quarantine/.gitkeep

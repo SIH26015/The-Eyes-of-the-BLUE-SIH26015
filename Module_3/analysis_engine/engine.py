@@ -1,21 +1,30 @@
-from typing import Dict, Any, Optional
-from backend.app.analysis.dataset_loader import AnalysisDatasetLoader, ANALYSIS_DATASET_NOT_READY, PRIMARY_SPATIAL_FILE_MISSING, UNSUPPORTED_DATASET_TYPE, RASTER_OPEN_FAILED
-from backend.app.analysis.terrain import TerrainAnalyzer
-from backend.app.analysis.vegetation import VegetationAnalyzer
-from backend.app.analysis.results import AnalysisResultWriter
-from backend.app.integration.analysis_data_provider import get_analysis_dataset
+from typing import Dict, Any, Optional, Callable
+from Module_3.analysis_engine.dataset_loader import AnalysisDatasetLoader, ANALYSIS_DATASET_NOT_READY, PRIMARY_SPATIAL_FILE_MISSING, UNSUPPORTED_DATASET_TYPE, RASTER_OPEN_FAILED
+from Module_3.analysis_engine.terrain import TerrainAnalyzer
+from Module_3.analysis_engine.vegetation import VegetationAnalyzer
+from Module_3.analysis_engine.results import AnalysisResultWriter
+from Module_3.analysis_engine.interfaces.dataset_provider import DatasetProvider
 import uuid
 from datetime import datetime
 
 
 class AnalysisEngine:
-    def __init__(self, base_dir: str):
+    def __init__(self, base_dir: str, dataset_provider: Optional[Callable[[int], Dict[str, Any]]] = None):
         self.base_dir = base_dir
         self.loader = AnalysisDatasetLoader(base_dir)
         self.writer = AnalysisResultWriter(base_dir)
+        self._dataset_provider = dataset_provider
+
+    def _get_dataset(self, dataset_id: int) -> Dict[str, Any]:
+        if self._dataset_provider is None:
+            raise RuntimeError(
+                "AnalysisEngine requires a dataset_provider. "
+                "Pass dataset_provider=get_analysis_dataset or equivalent when constructing."
+            )
+        return self._dataset_provider(dataset_id)
 
     def run_analysis(self, dataset_id: int, analysis_type: str, options: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-        dataset_contract = get_analysis_dataset(self.base_dir, dataset_id)
+        dataset_contract = self._get_dataset(dataset_id)
         loaded = self.loader.load(dataset_contract)
         if not loaded["success"]:
             return {

@@ -1,13 +1,19 @@
+import sys
+from pathlib import Path
+from typing import Dict, Any
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent.parent))
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-from pathlib import Path
-from typing import Dict, Any
 from .api import datasets
-from .analysis import engine as analysis_engine
-from .analysis.schemas import AnalysisRequest, AnalysisResult
-from .analysis.registry import AnalysisResultRegistry, ANALYSIS_NOT_FOUND, ANALYSIS_RESULT_INVALID, ANALYSIS_FILE_NOT_ALLOWED
+from functools import partial
+from Module_3.analysis_engine import engine as analysis_engine
+from Module_3.analysis_engine.schemas import AnalysisRequest, AnalysisResult
+from Module_3.analysis_engine.registry import AnalysisResultRegistry, ANALYSIS_NOT_FOUND, ANALYSIS_RESULT_INVALID, ANALYSIS_FILE_NOT_ALLOWED
+from .integration.analysis_data_provider import get_analysis_dataset
 
 app = FastAPI(title="Spatial Data Import API")
 
@@ -30,7 +36,7 @@ def health_check():
 @app.post("/api/analysis/terrain", response_model=Dict[str, Any])
 def run_terrain_analysis(request: AnalysisRequest):
     base_dir = str(datasets.BASE_DIR)
-    eng = analysis_engine.AnalysisEngine(base_dir)
+    eng = analysis_engine.AnalysisEngine(base_dir, dataset_provider=partial(get_analysis_dataset, base_dir))
     result = eng.run_analysis(request.dataset_id, request.analysis, request.options)
     return result
 
@@ -38,7 +44,7 @@ def run_terrain_analysis(request: AnalysisRequest):
 @app.post("/api/analysis/ndvi", response_model=Dict[str, Any])
 def run_ndvi_analysis(request: AnalysisRequest):
     base_dir = str(datasets.BASE_DIR)
-    eng = analysis_engine.AnalysisEngine(base_dir)
+    eng = analysis_engine.AnalysisEngine(base_dir, dataset_provider=partial(get_analysis_dataset, base_dir))
     result = eng.run_analysis(request.dataset_id, request.analysis, request.options)
     return result
 

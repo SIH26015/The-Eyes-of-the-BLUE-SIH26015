@@ -2,8 +2,8 @@ import zipfile
 from pathlib import Path
 from typing import Dict, Any, List
 
-from backend.app.ingestion.metadata.xml_parser import parse_xml
-from backend.app.ingestion.metadata.geotiff_reader import read_geotiff_metadata
+from backend.app.ingestion.parser.xml_parser import parse_xml
+from backend.app.ingestion.parser.geotiff_reader import read_geotiff_metadata
 from backend.app.ingestion.inspector import inspect_dataset
 
 

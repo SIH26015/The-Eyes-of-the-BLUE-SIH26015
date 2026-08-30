@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Dict, Any, Optional, Tuple, List
-from backend.app.ingestion.metadata.xml_parser import parse_xml, parse_bhuvan_xml
-from backend.app.ingestion.metadata.geotiff_reader import read_geotiff_metadata
+from backend.app.ingestion.parser.xml_parser import parse_xml, parse_bhuvan_xml
+from backend.app.ingestion.parser.geotiff_reader import read_geotiff_metadata
 from backend.app.ingestion.name_parser import parse_dataset_name
 
 

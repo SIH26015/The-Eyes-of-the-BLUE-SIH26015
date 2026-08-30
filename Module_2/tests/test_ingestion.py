@@ -10,16 +10,16 @@ import numpy as np
 import rasterio
 from rasterio.transform import from_bounds
 
-from app.ingestion.metadata.xml_parser import parse_xml, parse_bhuvan_xml
-from app.ingestion.metadata.geotiff_reader import read_geotiff_metadata
-from app.ingestion.inspector import inspect_dataset
-from app.ingestion.classifier import classify_dataset
-from app.ingestion.validator import validate_upload, validate_dataset
-from app.ingestion.duplicates import is_exact_duplicate
-from app.ingestion.organizer import build_destination, organize_files, generate_manifest, write_manifest
-from app.ingestion.catalog import init_db, insert_dataset, update_status, get_dataset, list_datasets, query_one
-from app.ingestion.pipeline import ingest_dataset
-from app.ingestion.name_parser import parse_dataset_name
+from backend.app.ingestion.parser.xml_parser import parse_xml, parse_bhuvan_xml
+from backend.app.ingestion.parser.geotiff_reader import read_geotiff_metadata
+from backend.app.ingestion.inspector import inspect_dataset
+from backend.app.ingestion.classifier import classify_dataset
+from backend.app.ingestion.validator import validate_upload, validate_dataset
+from backend.app.ingestion.duplicates import is_exact_duplicate
+from backend.app.ingestion.organizer import build_destination, organize_files, generate_manifest, write_manifest
+from backend.app.ingestion.catalog import init_db, insert_dataset, update_status, get_dataset, list_datasets, query_one
+from backend.app.ingestion.pipeline import ingest_dataset
+from backend.app.ingestion.name_parser import parse_dataset_name
 
 
 @pytest.fixture

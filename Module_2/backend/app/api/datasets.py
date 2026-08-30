@@ -2,6 +2,7 @@ from fastapi import APIRouter, UploadFile, File, HTTPException, Query
 from fastapi import Body
 from pathlib import Path
 from typing import Dict, Any, List, Optional
+from backend.app.config import PROJECT_ROOT
 from backend.app.ingestion.pipeline import ingest_dataset, reprocess_dataset
 from backend.app.ingestion.catalog import (
     list_datasets, get_dataset, update_dataset, init_db, delete_dataset,
@@ -20,7 +21,7 @@ import zipfile
 
 router = APIRouter()
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
+BASE_DIR = PROJECT_ROOT
 INCOMING_DIR = BASE_DIR / "data" / "incoming"
 PROCESSING_DIR = BASE_DIR / "data" / "processing"
 

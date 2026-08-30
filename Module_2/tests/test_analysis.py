@@ -6,24 +6,30 @@ import pytest
 import numpy as np
 import rasterio
 from rasterio.transform import from_bounds
+from functools import partial
 
 from fastapi.testclient import TestClient
 from backend.app.main import app
 from backend.app.api import datasets as datasets_module
 from backend.app.ingestion.pipeline import ingest_dataset
-from backend.app.analysis.engine import AnalysisEngine
-from backend.app.analysis.dataset_loader import (
+from Module_3.analysis_engine.engine import AnalysisEngine
+from Module_3.analysis_engine.dataset_loader import (
     ANALYSIS_DATASET_NOT_READY,
     PRIMARY_SPATIAL_FILE_MISSING,
     UNSUPPORTED_DATASET_TYPE,
     RASTER_OPEN_FAILED,
 )
-from backend.app.analysis.registry import (
+from Module_3.analysis_engine.registry import (
     AnalysisResultRegistry,
     ANALYSIS_NOT_FOUND,
     ANALYSIS_RESULT_INVALID,
     ANALYSIS_FILE_NOT_ALLOWED,
 )
+from backend.app.integration.analysis_data_provider import get_analysis_dataset
+
+
+def _make_engine(base_dir: str, **kwargs) -> AnalysisEngine:
+    return AnalysisEngine(base_dir, dataset_provider=partial(get_analysis_dataset, base_dir), **kwargs)
 
 
 @pytest.fixture
@@ -93,7 +99,7 @@ class TestTerrainAnalysis:
         assert result["status"] == "success"
         dataset_id = result["dataset_id"]
 
-        engine = AnalysisEngine(str(tmp_workspace))
+        engine = _make_engine(str(tmp_workspace))
         analysis = engine.run_analysis(dataset_id, "terrain")
 
         assert analysis["status"] == "completed"
@@ -109,7 +115,7 @@ class TestTerrainAnalysis:
         result = ingest_dataset(str(zip_path), str(tmp_workspace))
         dataset_id = result["dataset_id"]
 
-        engine = AnalysisEngine(str(tmp_workspace))
+        engine = _make_engine(str(tmp_workspace))
         analysis = engine.run_analysis(dataset_id, "terrain", {"slope": True, "aspect": False, "hillshade": False})
 
         assert analysis["status"] == "completed"
@@ -124,7 +130,7 @@ class TestTerrainAnalysis:
         result = ingest_dataset(str(zip_path), str(tmp_workspace))
         dataset_id = result["dataset_id"]
 
-        engine = AnalysisEngine(str(tmp_workspace))
+        engine = _make_engine(str(tmp_workspace))
         analysis = engine.run_analysis(dataset_id, "terrain", {"slope": False, "aspect": True, "hillshade": False})
 
         assert analysis["status"] == "completed"
@@ -139,7 +145,7 @@ class TestTerrainAnalysis:
         result = ingest_dataset(str(zip_path), str(tmp_workspace))
         dataset_id = result["dataset_id"]
 
-        engine = AnalysisEngine(str(tmp_workspace))
+        engine = _make_engine(str(tmp_workspace))
         analysis = engine.run_analysis(dataset_id, "terrain", {"slope": True, "aspect": True, "hillshade": True})
 
         assert analysis["status"] == "completed"
@@ -154,7 +160,7 @@ class TestTerrainAnalysis:
         result = ingest_dataset(str(zip_path), str(tmp_workspace))
         dataset_id = result["dataset_id"]
 
-        engine = AnalysisEngine(str(tmp_workspace))
+        engine = _make_engine(str(tmp_workspace))
         analysis = engine.run_analysis(dataset_id, "terrain")
 
         assert analysis["status"] == "completed"
@@ -171,7 +177,7 @@ class TestTerrainAnalysis:
         dataset_dir = Path(tmp_workspace) / result["location"]
         original_files = set(p.name for p in dataset_dir.rglob("*") if p.is_file())
 
-        engine = AnalysisEngine(str(tmp_workspace))
+        engine = _make_engine(str(tmp_workspace))
         engine.run_analysis(dataset_id, "terrain")
 
         current_files = set(p.name for p in dataset_dir.rglob("*") if p.is_file())
@@ -250,7 +256,7 @@ class TestPersistedAnalysisOutputs:
         result = ingest_dataset(str(zip_path), str(tmp_workspace))
         dataset_id = result["dataset_id"]
 
-        engine = AnalysisEngine(str(tmp_workspace))
+        engine = _make_engine(str(tmp_workspace))
         analysis = engine.run_analysis(dataset_id, "terrain")
         analysis_id = analysis["analysis_id"]
 
@@ -262,7 +268,7 @@ class TestPersistedAnalysisOutputs:
         result = ingest_dataset(str(zip_path), str(tmp_workspace))
         dataset_id = result["dataset_id"]
 
-        engine = AnalysisEngine(str(tmp_workspace))
+        engine = _make_engine(str(tmp_workspace))
         analysis = engine.run_analysis(dataset_id, "terrain")
         analysis_id = analysis["analysis_id"]
 
@@ -274,7 +280,7 @@ class TestPersistedAnalysisOutputs:
         result = ingest_dataset(str(zip_path), str(tmp_workspace))
         dataset_id = result["dataset_id"]
 
-        engine = AnalysisEngine(str(tmp_workspace))
+        engine = _make_engine(str(tmp_workspace))
         analysis = engine.run_analysis(dataset_id, "terrain")
         analysis_id = analysis["analysis_id"]
 
@@ -286,7 +292,7 @@ class TestPersistedAnalysisOutputs:
         result = ingest_dataset(str(zip_path), str(tmp_workspace))
         dataset_id = result["dataset_id"]
 
-        engine = AnalysisEngine(str(tmp_workspace))
+        engine = _make_engine(str(tmp_workspace))
         analysis = engine.run_analysis(dataset_id, "terrain")
         analysis_id = analysis["analysis_id"]
 
@@ -301,7 +307,7 @@ class TestPersistedAnalysisOutputs:
         result = ingest_dataset(str(zip_path), str(tmp_workspace))
         dataset_id = result["dataset_id"]
 
-        engine = AnalysisEngine(str(tmp_workspace))
+        engine = _make_engine(str(tmp_workspace))
         analysis = engine.run_analysis(dataset_id, "terrain")
         analysis_id = analysis["analysis_id"]
 
@@ -315,7 +321,7 @@ class TestPersistedAnalysisOutputs:
         result = ingest_dataset(str(zip_path), str(tmp_workspace))
         dataset_id = result["dataset_id"]
 
-        engine = AnalysisEngine(str(tmp_workspace))
+        engine = _make_engine(str(tmp_workspace))
         analysis = engine.run_analysis(dataset_id, "terrain")
         analysis_id = analysis["analysis_id"]
 
@@ -332,7 +338,7 @@ class TestAnalysisRegistry:
         result = ingest_dataset(str(zip_path), str(tmp_workspace))
         dataset_id = result["dataset_id"]
 
-        engine = AnalysisEngine(str(tmp_workspace))
+        engine = _make_engine(str(tmp_workspace))
         analysis = engine.run_analysis(dataset_id, "terrain")
         analysis_id = analysis["analysis_id"]
 
@@ -346,7 +352,7 @@ class TestAnalysisRegistry:
         result = ingest_dataset(str(zip_path), str(tmp_workspace))
         dataset_id = result["dataset_id"]
 
-        engine = AnalysisEngine(str(tmp_workspace))
+        engine = _make_engine(str(tmp_workspace))
         analysis = engine.run_analysis(dataset_id, "terrain")
         analysis_id = analysis["analysis_id"]
 
@@ -361,7 +367,7 @@ class TestAnalysisRegistry:
         result = ingest_dataset(str(zip_path), str(tmp_workspace))
         dataset_id = result["dataset_id"]
 
-        engine = AnalysisEngine(str(tmp_workspace))
+        engine = _make_engine(str(tmp_workspace))
         engine.run_analysis(dataset_id, "terrain")
 
         registry = AnalysisResultRegistry(str(tmp_workspace))
@@ -426,7 +432,7 @@ class TestAnalysisRegistry:
         r2 = ingest_dataset(str(zip2), str(tmp_workspace))
         assert r2["status"] == "success"
 
-        engine = AnalysisEngine(str(tmp_workspace))
+        engine = _make_engine(str(tmp_workspace))
         engine.run_analysis(r1["dataset_id"], "terrain")
         engine.run_analysis(r2["dataset_id"], "terrain")
 
@@ -440,7 +446,7 @@ class TestAnalysisRegistry:
         result = ingest_dataset(str(zip_path), str(tmp_workspace))
         dataset_id = result["dataset_id"]
 
-        engine = AnalysisEngine(str(tmp_workspace))
+        engine = _make_engine(str(tmp_workspace))
         analysis = engine.run_analysis(dataset_id, "terrain")
         analysis_id = analysis["analysis_id"]
 
@@ -460,7 +466,7 @@ class TestAnalysisRegistry:
         result = ingest_dataset(str(zip_path), str(tmp_workspace))
         dataset_id = result["dataset_id"]
 
-        engine = AnalysisEngine(str(tmp_workspace))
+        engine = _make_engine(str(tmp_workspace))
         analysis = engine.run_analysis(dataset_id, "terrain")
         analysis_id = analysis["analysis_id"]
 
@@ -479,7 +485,7 @@ class TestAnalysisRegistry:
         result = ingest_dataset(str(zip_path), str(tmp_workspace))
         dataset_id = result["dataset_id"]
 
-        engine = AnalysisEngine(str(tmp_workspace))
+        engine = _make_engine(str(tmp_workspace))
         analysis = engine.run_analysis(dataset_id, "terrain")
         analysis_id = analysis["analysis_id"]
 
@@ -501,7 +507,7 @@ class TestAnalysisRegistry:
         datasets_module.BASE_DIR = Path(str(tmp_workspace))
         try:
             client = TestClient(app)
-            engine = AnalysisEngine(str(tmp_workspace))
+            engine = _make_engine(str(tmp_workspace))
             engine.run_analysis(dataset_id, "terrain")
 
             response = client.get("/api/analysis/results")
@@ -520,7 +526,7 @@ class TestAnalysisRegistry:
         original_base = datasets_module.BASE_DIR
         datasets_module.BASE_DIR = Path(str(tmp_workspace))
         try:
-            engine = AnalysisEngine(str(tmp_workspace))
+            engine = _make_engine(str(tmp_workspace))
             analysis = engine.run_analysis(dataset_id, "terrain")
             analysis_id = analysis["analysis_id"]
 
@@ -550,7 +556,7 @@ class TestAnalysisRegistry:
         original_base = datasets_module.BASE_DIR
         datasets_module.BASE_DIR = Path(str(tmp_workspace))
         try:
-            engine = AnalysisEngine(str(tmp_workspace))
+            engine = _make_engine(str(tmp_workspace))
             analysis = engine.run_analysis(dataset_id, "terrain")
             analysis_id = analysis["analysis_id"]
 
@@ -568,7 +574,7 @@ class TestAnalysisRegistry:
         original_base = datasets_module.BASE_DIR
         datasets_module.BASE_DIR = Path(str(tmp_workspace))
         try:
-            engine = AnalysisEngine(str(tmp_workspace))
+            engine = _make_engine(str(tmp_workspace))
             analysis = engine.run_analysis(dataset_id, "terrain")
             analysis_id = analysis["analysis_id"]
 
@@ -586,7 +592,7 @@ class TestAnalysisRegistry:
         original_base = datasets_module.BASE_DIR
         datasets_module.BASE_DIR = Path(str(tmp_workspace))
         try:
-            engine = AnalysisEngine(str(tmp_workspace))
+            engine = _make_engine(str(tmp_workspace))
             analysis = engine.run_analysis(dataset_id, "terrain")
             analysis_id = analysis["analysis_id"]
 
@@ -604,7 +610,7 @@ class TestAnalysisRegistry:
         original_base = datasets_module.BASE_DIR
         datasets_module.BASE_DIR = Path(str(tmp_workspace))
         try:
-            engine = AnalysisEngine(str(tmp_workspace))
+            engine = _make_engine(str(tmp_workspace))
             analysis = engine.run_analysis(dataset_id, "terrain")
             analysis_id = analysis["analysis_id"]
 
@@ -640,7 +646,7 @@ def _create_satellite_tif(tmp_workspace, name="satellite.tif", bands=4):
 
 class TestNdviAnalysis:
     def test_ndvi_calculation_basic(self, tmp_workspace):
-        from backend.app.analysis.vegetation import VegetationAnalyzer
+        from Module_3.analysis_engine.vegetation import VegetationAnalyzer
 
         red = np.ones((10, 10), dtype=np.float32) * 0.2
         nir = np.ones((10, 10), dtype=np.float32) * 0.8
@@ -664,7 +670,7 @@ class TestNdviAnalysis:
         assert ndvi["valid_pixels"] == 100
 
     def test_ndvi_handles_division_by_zero(self, tmp_workspace):
-        from backend.app.analysis.vegetation import VegetationAnalyzer
+        from Module_3.analysis_engine.vegetation import VegetationAnalyzer
 
         red = np.zeros((10, 10), dtype=np.float32)
         nir = np.zeros((10, 10), dtype=np.float32)
@@ -685,7 +691,7 @@ class TestNdviAnalysis:
         assert ndvi["valid_pixels"] == 0
 
     def test_ndvi_distribution_categories(self, tmp_workspace):
-        from backend.app.analysis.vegetation import VegetationAnalyzer
+        from Module_3.analysis_engine.vegetation import VegetationAnalyzer
 
         red = np.ones((10, 10), dtype=np.float32) * 0.3
         nir = np.ones((10, 10), dtype=np.float32) * 0.7
